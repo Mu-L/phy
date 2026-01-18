@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2010-2025 Three.js Authors
+ * Copyright 2010-2026 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
 const REVISION = '183dev';
@@ -1753,6 +1753,26 @@ const Compatibility = {
  * @property {string} EITHER - Flat interpolation using either vertex.
  */
 
+/**
+ * Finds the minimum value in an array.
+ *
+ * @private
+ * @param {Array<number>} array - The array to search for the minimum value.
+ * @return {number} The minimum value in the array, or Infinity if the array is empty.
+ */
+
+/**
+ * Checks if an array contains values that require Uint32 representation.
+ *
+ * This function determines whether the array contains any values >= 65535,
+ * which would require a Uint32Array rather than a Uint16Array for proper storage.
+ * The function iterates from the end of the array, assuming larger values are
+ * typically located at the end.
+ *
+ * @private
+ * @param {Array<number>} array - The array to check.
+ * @return {boolean} True if the array contains values >= 65535, false otherwise.
+ */
 function arrayNeedsUint32( array ) {
 
 	// assumes larger values usually on last
@@ -1767,6 +1787,14 @@ function arrayNeedsUint32( array ) {
 
 }
 
+/**
+ * Map of typed array constructor names to their constructors.
+ * This mapping enables dynamic creation of typed arrays based on string type names.
+ *
+ * @private
+ * @constant
+ * @type {Object<string, TypedArrayConstructor>}
+ */
 const TYPED_ARRAYS = {
 	Int8Array: Int8Array,
 	Uint8Array: Uint8Array,
@@ -1779,6 +1807,14 @@ const TYPED_ARRAYS = {
 	Float64Array: Float64Array
 };
 
+/**
+ * Creates a typed array of the specified type from the given buffer.
+ *
+ * @private
+ * @param {string} type - The name of the typed array type (e.g., 'Float32Array', 'Uint16Array').
+ * @param {ArrayBuffer} buffer - The buffer to create the typed array from.
+ * @return {TypedArray} A new typed array of the specified type.
+ */
 function getTypedArray( type, buffer ) {
 
 	return new TYPED_ARRAYS[ type ]( buffer );
@@ -1797,12 +1833,31 @@ function isTypedArray( array ) {
 
 }
 
+/**
+ * Creates an XHTML element with the specified tag name.
+ *
+ * This function uses the XHTML namespace to create DOM elements,
+ * ensuring proper element creation in XML-based contexts.
+ *
+ * @private
+ * @param {string} name - The tag name of the element to create (e.g., 'canvas', 'div').
+ * @return {HTMLElement} The created XHTML element.
+ */
 function createElementNS( name ) {
 
 	return document.createElementNS( 'http://www.w3.org/1999/xhtml', name );
 
 }
 
+/**
+ * Creates a canvas element configured for block display.
+ *
+ * This is a convenience function that creates a canvas element with
+ * display style set to 'block', which is commonly used in three.js
+ * rendering contexts to avoid inline element spacing issues.
+ *
+ * @return {HTMLCanvasElement} A canvas element with display set to 'block'.
+ */
 function createCanvasElement() {
 
 	const canvas = createElementNS( 'canvas' );
@@ -1811,22 +1866,59 @@ function createCanvasElement() {
 
 }
 
+/**
+ * Internal cache for tracking warning messages to prevent duplicate warnings.
+ *
+ * @private
+ * @type {Object<string, boolean>}
+ */
 const _cache = {};
 
+/**
+ * Custom console function handler for intercepting log, warn, and error calls.
+ *
+ * @private
+ * @type {Function|null}
+ */
 let _setConsoleFunction = null;
 
+/**
+ * Sets a custom function to handle console output.
+ *
+ * This allows external code to intercept and handle console.log, console.warn,
+ * and console.error calls made by three.js, which is useful for custom logging,
+ * testing, or debugging workflows.
+ *
+ * @param {Function} fn - The function to handle console output. Should accept
+ *                        (type, message, ...params) where type is 'log', 'warn', or 'error'.
+ */
 function setConsoleFunction( fn ) {
 
 	_setConsoleFunction = fn;
 
 }
 
+/**
+ * Gets the currently set custom console function.
+ *
+ * @return {Function|null} The custom console function, or null if not set.
+ */
 function getConsoleFunction() {
 
 	return _setConsoleFunction;
 
 }
 
+/**
+ * Logs an informational message with the 'THREE.' prefix.
+ *
+ * If a custom console function is set via setConsoleFunction(), it will be used
+ * instead of the native console.log. The first parameter is treated as the
+ * method name and is automatically prefixed with 'THREE.'.
+ *
+ * @param {...any} params - The message components. The first param is used as
+ *                          the method name and prefixed with 'THREE.'.
+ */
 function log( ...params ) {
 
 	const message = 'THREE.' + params.shift();
@@ -1843,6 +1935,16 @@ function log( ...params ) {
 
 }
 
+/**
+ * Logs a warning message with the 'THREE.' prefix.
+ *
+ * If a custom console function is set via setConsoleFunction(), it will be used
+ * instead of the native console.warn. The first parameter is treated as the
+ * method name and is automatically prefixed with 'THREE.'.
+ *
+ * @param {...any} params - The message components. The first param is used as
+ *                          the method name and prefixed with 'THREE.'.
+ */
 function warn( ...params ) {
 
 	const message = 'THREE.' + params.shift();
@@ -1859,6 +1961,16 @@ function warn( ...params ) {
 
 }
 
+/**
+ * Logs an error message with the 'THREE.' prefix.
+ *
+ * If a custom console function is set via setConsoleFunction(), it will be used
+ * instead of the native console.error. The first parameter is treated as the
+ * method name and is automatically prefixed with 'THREE.'.
+ *
+ * @param {...any} params - The message components. The first param is used as
+ *                          the method name and prefixed with 'THREE.'.
+ */
 function error( ...params ) {
 
 	const message = 'THREE.' + params.shift();
@@ -1875,6 +1987,15 @@ function error( ...params ) {
 
 }
 
+/**
+ * Logs a warning message only once, preventing duplicate warnings.
+ *
+ * This function maintains an internal cache of warning messages and will only
+ * output each unique warning message once. Useful for warnings that may be
+ * triggered repeatedly but should only be shown to the user once.
+ *
+ * @param {...any} params - The warning message components.
+ */
 function warnOnce( ...params ) {
 
 	const message = params.join( ' ' );
@@ -1887,6 +2008,20 @@ function warnOnce( ...params ) {
 
 }
 
+/**
+ * Asynchronously probes for WebGL sync object completion.
+ *
+ * This function creates a promise that resolves when the WebGL sync object
+ * signals completion or rejects if the sync operation fails. It uses polling
+ * at the specified interval to check the sync status without blocking the
+ * main thread. This is useful for GPU-CPU synchronization in WebGL contexts.
+ *
+ * @private
+ * @param {WebGLRenderingContext|WebGL2RenderingContext} gl - The WebGL rendering context.
+ * @param {WebGLSync} sync - The WebGL sync object to wait for.
+ * @param {number} interval - The polling interval in milliseconds.
+ * @return {Promise<void>} A promise that resolves when the sync completes or rejects if it fails.
+ */
 function probeAsync( gl, sync, interval ) {
 
 	return new Promise( function ( resolve, reject ) {
@@ -13649,12 +13784,35 @@ class Object3D extends EventDispatcher {
 		this.customDistanceMaterial = undefined;
 
 		/**
+		 * Whether the 3D object is supposed to be static or not. If set to `true`, it means
+		 * the 3D object is not going to be changed after the initial renderer. This includes
+		 * geometry and material settings. A static 3D object can be processed by the renderer
+		 * slightly faster since certain state checks can be bypassed.
+		 *
+		 * Only relevant in context of {@link WebGPURenderer}.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.static = false;
+
+		/**
 		 * An object that can be used to store custom data about the 3D object. It
 		 * should not hold references to functions as these will not be cloned.
 		 *
 		 * @type {Object}
 		 */
 		this.userData = {};
+
+		/**
+		 * The pivot point for rotation and scale transformations.
+		 * When set, rotation and scale are applied around this point
+		 * instead of the object's origin.
+		 *
+		 * @type {?Vector3}
+		 * @default null
+		 */
+		this.pivot = null;
 
 	}
 
@@ -14403,6 +14561,19 @@ class Object3D extends EventDispatcher {
 
 		this.matrix.compose( this.position, this.quaternion, this.scale );
 
+		const pivot = this.pivot;
+
+		if ( pivot !== null ) {
+
+			const px = pivot.x, py = pivot.y, pz = pivot.z;
+			const te = this.matrix.elements;
+
+			te[ 12 ] += px - te[ 0 ] * px - te[ 4 ] * py - te[ 8 ] * pz;
+			te[ 13 ] += py - te[ 1 ] * px - te[ 5 ] * py - te[ 9 ] * pz;
+			te[ 14 ] += pz - te[ 2 ] * px - te[ 6 ] * py - te[ 10 ] * pz;
+
+		}
+
 		this.matrixWorldNeedsUpdate = true;
 
 	}
@@ -14561,11 +14732,14 @@ class Object3D extends EventDispatcher {
 		if ( this.visible === false ) object.visible = false;
 		if ( this.frustumCulled === false ) object.frustumCulled = false;
 		if ( this.renderOrder !== 0 ) object.renderOrder = this.renderOrder;
+		if ( this.static !== false ) object.static = this.static;
 		if ( Object.keys( this.userData ).length > 0 ) object.userData = this.userData;
 
 		object.layers = this.layers.mask;
 		object.matrix = this.matrix.toArray();
 		object.up = this.up.toArray();
+
+		if ( this.pivot !== null ) object.pivot = this.pivot.toArray();
 
 		if ( this.matrixAutoUpdate === false ) object.matrixAutoUpdate = false;
 
@@ -14842,6 +15016,12 @@ class Object3D extends EventDispatcher {
 		this.quaternion.copy( source.quaternion );
 		this.scale.copy( source.scale );
 
+		if ( source.pivot !== null ) {
+
+			this.pivot = source.pivot.clone();
+
+		}
+
 		this.matrix.copy( source.matrix );
 		this.matrixWorld.copy( source.matrixWorld );
 
@@ -14858,6 +15038,8 @@ class Object3D extends EventDispatcher {
 
 		this.frustumCulled = source.frustumCulled;
 		this.renderOrder = source.renderOrder;
+
+		this.static = source.static;
 
 		this.animations = source.animations.slice();
 
@@ -28034,12 +28216,10 @@ class BatchedMesh extends Mesh {
 			nextVertexStart += geometryInfo.reservedVertexCount;
 			geometryInfo.start = geometry.index ? geometryInfo.indexStart : geometryInfo.vertexStart;
 
-			// step the next geometry points to the shifted position
-			this._nextIndexStart = geometry.index ? geometryInfo.indexStart + geometryInfo.reservedIndexCount : 0;
-			this._nextVertexStart = geometryInfo.vertexStart + geometryInfo.reservedVertexCount;
-
 		}
 
+		this._nextIndexStart = nextIndexStart;
+		this._nextVertexStart = nextVertexStart;
 		this._visibilityChanged = true;
 
 		return this;
@@ -37419,8 +37599,10 @@ class TorusGeometry extends BufferGeometry {
 	 * @param {number} [radialSegments=12] - The number of radial segments.
 	 * @param {number} [tubularSegments=48] - The number of tubular segments.
 	 * @param {number} [arc=Math.PI*2] - Central angle in radians.
+	 * @param {number} [thetaStart=0] - Start of the tubular sweep in radians.
+	 * @param {number} [thetaLength=Math.PI*2] - Length of the tubular sweep in radians.
 	 */
-	constructor( radius = 1, tube = 0.4, radialSegments = 12, tubularSegments = 48, arc = Math.PI * 2 ) {
+	constructor( radius = 1, tube = 0.4, radialSegments = 12, tubularSegments = 48, arc = Math.PI * 2, thetaStart = 0, thetaLength = Math.PI * 2 ) {
 
 		super();
 
@@ -37438,7 +37620,9 @@ class TorusGeometry extends BufferGeometry {
 			tube: tube,
 			radialSegments: radialSegments,
 			tubularSegments: tubularSegments,
-			arc: arc
+			arc: arc,
+			thetaStart: thetaStart,
+			thetaLength: thetaLength,
 		};
 
 		radialSegments = Math.floor( radialSegments );
@@ -37461,10 +37645,11 @@ class TorusGeometry extends BufferGeometry {
 
 		for ( let j = 0; j <= radialSegments; j ++ ) {
 
+			const v = thetaStart + ( j / radialSegments ) * thetaLength;
+
 			for ( let i = 0; i <= tubularSegments; i ++ ) {
 
 				const u = i / tubularSegments * arc;
-				const v = j / radialSegments * Math.PI * 2;
 
 				// vertex
 
@@ -48981,6 +49166,8 @@ class ObjectLoader extends Loader {
 
 		if ( data.up !== undefined ) object.up.fromArray( data.up );
 
+		if ( data.pivot !== undefined ) object.pivot = new Vector3().fromArray( data.pivot );
+
 		if ( data.castShadow !== undefined ) object.castShadow = data.castShadow;
 		if ( data.receiveShadow !== undefined ) object.receiveShadow = data.receiveShadow;
 
@@ -48998,6 +49185,7 @@ class ObjectLoader extends Loader {
 		if ( data.visible !== undefined ) object.visible = data.visible;
 		if ( data.frustumCulled !== undefined ) object.frustumCulled = data.frustumCulled;
 		if ( data.renderOrder !== undefined ) object.renderOrder = data.renderOrder;
+		if ( data.static !== undefined ) object.static = data.static;
 		if ( data.userData !== undefined ) object.userData = data.userData;
 		if ( data.layers !== undefined ) object.layers.mask = data.layers;
 
@@ -56531,6 +56719,9 @@ const _vector$3 = /*@__PURE__*/ new Vector3();
 /**
  * This displays a cone shaped helper object for a {@link SpotLight}.
  *
+ * When the spot light or its target are transformed or light properties are
+ * changed, it's necessary to call the `update()` method of the respective helper.
+ *
  * ```js
  * const spotLight = new THREE.SpotLight( 0xffffff );
  * spotLight.position.set( 10, 10, 10 );
@@ -56989,6 +57180,9 @@ const _color2 = /*@__PURE__*/ new Color();
  * Creates a visual aid consisting of a spherical mesh for a
  * given {@link HemisphereLight}.
  *
+ * When the hemisphere light is transformed or its light properties are changed,
+ * it's necessary to call the `update()` method of the respective helper.
+ *
  * ```js
  * const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
  * const helper = new THREE.HemisphereLightHelper( light, 5 );
@@ -57296,8 +57490,11 @@ const _v3 = /*@__PURE__*/ new Vector3();
 
 /**
  * Helper object to assist with visualizing a {@link DirectionalLight}'s
- * effect on the scene. This consists of plane and a line representing the
+ * effect on the scene. This consists of a plane and a line representing the
  * light's position and direction.
+ *
+ * When the directional light or its target are transformed or light properties
+ * are changed, it's necessary to call the `update()` method of the respective helper.
  *
  * ```js
  * const light = new THREE.DirectionalLight( 0xFFFFFF );
@@ -57436,6 +57633,9 @@ const _camera = /*@__PURE__*/ new Camera();
  * Based on frustum visualization in [lightgl.js shadowmap example](https://github.com/evanw/lightgl.js/blob/master/tests/shadowmap.html).
  *
  * `CameraHelper` must be a child of the scene.
+ *
+ * When the camera is transformed or its projection matrix is changed, it's necessary
+ * to call the `update()` method of the respective helper.
  *
  * ```js
  * const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );

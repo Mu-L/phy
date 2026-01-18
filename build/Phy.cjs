@@ -238,8 +238,8 @@ const M$2 = {
 
     Mat3FromQuatArray: ( q ) => {
 
-        const x = q[0], y = q[1], z = q[2], w = q[3];
-        const x2 = x + x,   y2 = y + y, z2 = z + z;
+        /*const x = q[0], y = q[1], z = q[2], w = q[3];
+        const x2 = x + x, y2 = y + y, z2 = z + z;
         const xx = x * x2, xy = x * y2, xz = x * z2;
         const yy = y * y2, yz = y * z2, zz = z * z2;
         const wx = w * x2, wy = w * y2, wz = w * z2;
@@ -255,28 +255,28 @@ const M$2 = {
 
         let r20 = ( xz + wy ) * sz;
         let r21 = ( yz - wx ) * sz;
-        let r22 = ( 1 - ( xx + yy ) ) * sz;
+        let r22 = ( 1 - ( xx + yy ) ) * sz;*/
 
 
-        /*let q0 = q[3];//w
+        let q0 = q[3];//w
         let q1 = q[0];//x
         let q2 = q[1];//y
         let q3 = q[2];//z
 
         // First row of the rotation matrix
-        let r00 = 2 * (q0 * q0 + q1 * q1) - 1
-        let r01 = 2 * (q1 * q2 - q0 * q3)
-        let r02 = 2 * (q1 * q3 + q0 * q2)
+        let r00 = 2 * (q0 * q0 + q1 * q1) - 1;
+        let r01 = 2 * (q1 * q2 - q0 * q3);
+        let r02 = 2 * (q1 * q3 + q0 * q2);
          
         // Second row of the rotation matrix
-        let r10 = 2 * (q1 * q2 + q0 * q3)
-        let r11 = 2 * (q0 * q0 + q2 * q2) - 1
-        let r12 = 2 * (q2 * q3 - q0 * q1)
+        let r10 = 2 * (q1 * q2 + q0 * q3);
+        let r11 = 2 * (q0 * q0 + q2 * q2) - 1;
+        let r12 = 2 * (q2 * q3 - q0 * q1);
          
         // Third row of the rotation matrix
-        let r20 = 2 * (q1 * q3 - q0 * q2)
-        let r21 = 2 * (q2 * q3 + q0 * q1)
-        let r22 = 2 * (q0 * q0 + q3 * q3) - 1*/
+        let r20 = 2 * (q1 * q3 - q0 * q2);
+        let r21 = 2 * (q2 * q3 + q0 * q1);
+        let r22 = 2 * (q0 * q0 + q3 * q3) - 1;
 
         // ROW
         /*let d = [
@@ -9129,7 +9129,7 @@ class Joint extends Item {
 			o.quat1 = this.Utils.quatLocal(o.worldQuat, body1);
 			o.quat2 = this.Utils.quatLocal(o.worldQuat, body2);
 
-			if( this.engine === 'OIMO' ||  this.engine === 'JOLT' ){//this.engine === 'HAVOK' ||
+			if( this.engine === 'OIMO' ){//this.engine === 'HAVOK' ||
 
 				//this.v1.fromArray( math.quadToAxisArray( o.worldQuat ) ).normalize()
 				//this.v2.fromArray( math.quadToAxisArray( o.worldQuat ) ).normalize()
@@ -9213,7 +9213,7 @@ class Joint extends Item {
 		//console.log(o.quat1, o.quat2)
 
 
-		if( this.engine === 'HAVOK' ){ 
+		if( this.engine === 'HAVOK' || this.engine === 'JOLT' ){ 
 			//o.quat1 = MathTool.quatNomalize(o.quat1)
 			let m31 = MathTool.Mat3FromQuatArray( o.quat1 );
 			let m32 = MathTool.Mat3FromQuatArray( o.quat2 );
@@ -20023,13 +20023,13 @@ class MouseTool {
 			//let defr = [-0.1, 0.1, 100, 50]
 
 			let spring = [];
-			let def = [-0.1, 0.1, ...spring];//600, 1
+			let def = [-0.01, 0.01, ...spring];//600, 1
 			let defr = [-0.1, 0.1, ...spring];
 			//let defr = [0, 0]
-			let notUseKinematic = engine === 'OIMO' || engine ==='RAPIER' || engine ==='JOLT';//|| engine ==='HAVOK'
+			let notUseKinematic = engine === 'OIMO' || engine ==='RAPIER'; //|| engine ==='JOLT'//|| engine ==='HAVOK'
 			let jtype = this.selected.link === 0 ? 'fixe' : 'd6';//root.engine === 'HAVOK' ? 'fixe' : 'd6';
 
-			if( engine === 'JOLT' ) jtype = 'fixe';
+			//if( engine === 'JOLT' ) jtype = 'fixe';
 
 			let limite = [['x',...def], ['y',...def], ['z',...def], ['rx',...defr], ['ry',...defr], ['rz',...defr]];
 			//let motor = 
@@ -20063,8 +20063,10 @@ class MouseTool {
 					mode:jtype,
 					lm:limite,
 					//motor:motor,
-					sd:[4.0, 1.0],
+					//sd:[4.0, 1.0],
 					//autoDrive: true,
+
+					//step:[10,10],
 
 
 					b1:revert ? this.selected.name : 'mouse',
@@ -22697,7 +22699,9 @@ const _box = /*@__PURE__*/ new three.Box3();
 
 class BoxHelper extends three.LineSegments {
 
-	constructor( object, color = 0xffff00 ) {
+	constructor( object, color = 0xffff00, alpha = 1 ) {
+
+		
 
 		const indices = new Uint16Array( [ 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 ] );
 		const positions = new Float32Array( 8 * 3 );
@@ -22714,7 +22718,7 @@ class BoxHelper extends three.LineSegments {
 		geometry.setAttribute( 'position', new three.BufferAttribute( positions, 3 ) );
 		geometry.setAttribute( 'color', new three.BufferAttribute( colors, 3 ) );
 
-		super( geometry, new three.LineBasicMaterial( { vertexColors: true, toneMapped: false } ) );
+		super( geometry, new three.LineBasicMaterial( { vertexColors: true, toneMapped: false, transparent:alpha!==1, opacity:alpha } ) );
 
 		this.object = object;
 		this.type = 'BoxHelper';
@@ -22876,8 +22880,6 @@ class Container {
 
 		}
 
-		
-
 		if( this.isCompound ){
 			let mesh = null;
 			if( this.remplace ){
@@ -22886,8 +22888,9 @@ class Container {
 
 				if(o.material){
 					if(o.material === 'debug'){ 
-						mesh = new BoxHelper( mesh, o.color );
-						o.material = 'line';
+						mesh = new BoxHelper( mesh, o.color, o.alpha );
+						delete o.material;
+						//o.material ='line'
 					}
 				}
 

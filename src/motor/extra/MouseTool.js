@@ -607,13 +607,13 @@ export class MouseTool {
 			//let defr = [-0.1, 0.1, 100, 50]
 
 			let spring = []
-			let def = [-0.1, 0.1, ...spring]//600, 1
+			let def = [-0.01, 0.01, ...spring]//600, 1
 			let defr = [-0.1, 0.1, ...spring]
 			//let defr = [0, 0]
-			let notUseKinematic = engine === 'OIMO' || engine ==='RAPIER' || engine ==='JOLT'//|| engine ==='HAVOK'
+			let notUseKinematic = engine === 'OIMO' || engine ==='RAPIER' //|| engine ==='JOLT'//|| engine ==='HAVOK'
 			let jtype = this.selected.link === 0 ? 'fixe' : 'd6';//root.engine === 'HAVOK' ? 'fixe' : 'd6';
 
-			if( engine === 'JOLT' ) jtype = 'fixe';
+			//if( engine === 'JOLT' ) jtype = 'fixe';
 
 			let limite = [['x',...def], ['y',...def], ['z',...def], ['rx',...defr], ['ry',...defr], ['rz',...defr]]
 			//let motor = 
@@ -647,8 +647,10 @@ export class MouseTool {
 					mode:jtype,
 					lm:limite,
 					//motor:motor,
-					sd:[4.0, 1.0],
+					//sd:[4.0, 1.0],
 					//autoDrive: true,
+
+					//step:[10,10],
 
 
 					b1:revert ? this.selected.name : 'mouse',

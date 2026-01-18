@@ -29,6 +29,7 @@ function demo() {
     phy.add({ 
         type:'generic', b1:'b1', b2:'b2', 
         worldPos:[0,2,0], 
+        step:[10,10],
         
         worldQuat:Q,
         
@@ -43,5 +44,16 @@ function demo() {
         friction:0, collision:false, visible:true 
     });
 
+
+    phy.load(['models/z_item.glb'], onComplete, './assets/' )
+
+
+}
+
+onComplete = () => {
+
+    let m = phy.getGlb('z_item', true)
+    m.position.y = 0.2
+    phy.add(m)
 
 }

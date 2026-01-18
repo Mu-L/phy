@@ -6,7 +6,9 @@ const _box = /*@__PURE__*/ new Box3();
 
 class BoxHelper extends LineSegments {
 
-	constructor( object, color = 0xffff00 ) {
+	constructor( object, color = 0xffff00, alpha = 1 ) {
+
+		
 
 		const indices = new Uint16Array( [ 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 ] );
 		const positions = new Float32Array( 8 * 3 );
@@ -23,7 +25,7 @@ class BoxHelper extends LineSegments {
 		geometry.setAttribute( 'position', new BufferAttribute( positions, 3 ) );
 		geometry.setAttribute( 'color', new BufferAttribute( colors, 3 ) );
 
-		super( geometry, new LineBasicMaterial( { vertexColors: true, toneMapped: false } ) );
+		super( geometry, new LineBasicMaterial( { vertexColors: true, toneMapped: false, transparent:alpha!==1, opacity:alpha } ) );
 
 		this.object = object;
 		this.type = 'BoxHelper';

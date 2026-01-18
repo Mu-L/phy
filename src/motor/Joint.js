@@ -157,7 +157,7 @@ export class Joint extends Item {
 			o.quat1 = this.Utils.quatLocal(o.worldQuat, body1)
 			o.quat2 = this.Utils.quatLocal(o.worldQuat, body2)
 
-			if( this.engine === 'OIMO' ||  this.engine === 'JOLT' ){//this.engine === 'HAVOK' ||
+			if( this.engine === 'OIMO' ){//this.engine === 'HAVOK' ||
 
 				//this.v1.fromArray( math.quadToAxisArray( o.worldQuat ) ).normalize()
 				//this.v2.fromArray( math.quadToAxisArray( o.worldQuat ) ).normalize()
@@ -241,7 +241,7 @@ export class Joint extends Item {
 		//console.log(o.quat1, o.quat2)
 
 
-		if( this.engine === 'HAVOK' ){ 
+		if( this.engine === 'HAVOK' || this.engine === 'JOLT' ){ 
 			//o.quat1 = MathTool.quatNomalize(o.quat1)
 			let m31 = MathTool.Mat3FromQuatArray( o.quat1 )
 			let m32 = MathTool.Mat3FromQuatArray( o.quat2 )

@@ -36,8 +36,18 @@ export class Joint extends Item {
 			//LINEAR_DISTANCE: Jolt.EAxis.Num,
 		}*/
 
+		/*his.DOFaxis = {
+			x: Jolt.SixDOFConstraintSettings_EAxis_TranslationX,
+			y: Jolt.SixDOFConstraintSettings_EAxis_TranslationX,
+			z: Jolt.SixDOFConstraintSettings_EAxis_TranslationX,
+
+			rx: Jolt.SixDOFConstraintSettings_EAxis_RotationX,
+			ry: Jolt.SixDOFConstraintSettings_EAxis_RotationY,
+			rz: Jolt.SixDOFConstraintSettings_EAxis_RotationZ,
+		}*/
+
 		this.convert = {
-			x:'x',
+			x:'y',
 			y:'y',
 			z:'z',
 			rx:'rx',
@@ -80,10 +90,10 @@ export class Joint extends Item {
 		let b1 = this.byName(o.b1);
 		let b2 = this.byName(o.b2);
 
-		let b1Pos = [0,0,0]
+		/*let b1Pos = [0,0,0]
 		let b2Pos = [0,0,0]
 		let b1Quat = [0,0,0,1]
-		let b2Quat = [0,0,0,1]
+		let b2Quat = [0,0,0,1]*/
 
 
 		
@@ -93,22 +103,28 @@ export class Joint extends Item {
 
 		// anchors
         let posA = o.pos1 ? o.pos1 : [0,0,0];
-        let axisA = o.axis1 ? o.axis1 : [1,0,0];
         let posB = o.pos2 ? o.pos2 : [0,0,0];
-        let axisB = o.axis2 ? o.axis2 : [1,0,0];
+
+        // AXIS
+
+        let axisX1 = o.axis1 ? o.axis1 : [1,0,0];
+        let axisX2 = o.axis1Y ? o.axis1Y : [1,0,0];
+
+        let axisY1 = o.axis2 ? o.axis2 : [1,0,0];
+        let axisY2 = o.axis2Y ? o.axis2Y : [1,0,0];
 
         /*if(o.worldAxis){
 			axisA = o.worldAxis; 
 			axisB = o.worldAxis; 
 		}*/
 
-        let normA =  [0,1,0];
-        let perpAxisA = o.axisY1 ? o.axisY1 : MathTool.perpendicularArray(axisA);
+        //let normA =  [0,1,0];
+        //let perpAxisA = MathTool.perpendicularArray(axisA);
         //const perpAxisA = this.getNormalToRef(axisA);
         //havok.HP_Constraint_SetAnchorInParent(j, posA, axisA, perpAxisA);
         
-        let perpAxisB = o.axisY2 ? o.axisY2 : MathTool.perpendicularArray(axisB);
-        let normB =  [0,1,0];
+        //let perpAxisB = MathTool.perpendicularArray(axisB);
+        //let normB =  [0,1,0];
 
         //const axeX = [1,0,0]
         //const axeY = [0,1,0]
@@ -127,8 +143,8 @@ export class Joint extends Item {
 			case 'fixe': jc = new Jolt.FixedConstraintSettings(); jc.mAutoDetectPoint = true; jtype = 'FixedConstraint'; break;
 			case 'hinge': jc = new Jolt.HingeConstraintSettings(); jtype = 'HingeConstraint'; break;
             case 'distance': jc = new Jolt.DistanceConstraintSettings(); jtype = 'DistanceConstraint';break;
-            case 'prismatic': jc = new Jolt.SliderConstraintSettings(); jtype = 'SliderConstraint';break;
-            case 'spherical': jc = new Jolt.PointConstraintSettings(); jtype = 'PointConstraintConstraint';break;
+            case 'prismatic': jc = new Jolt.SliderConstraintSettings(); jtype = 'SliderConstraint'; break;
+            case 'spherical': jc = new Jolt.PointConstraintSettings(); jtype = 'PointConstraintConstraint'; break;
             case 'cone': jc = new Jolt.ConeConstraintSettings(); jtype = 'ConeConstraint';break;
             //case 'ragdoll': jc = new Jolt.SwingTwistConstraintSettings(); jtype = 'SwingTwistConstraint'; break;
             case 'ragdoll': case "generic":  case "cylindrical": jc = new Jolt.SixDOFConstraintSettings(); jtype = 'SixDOFConstraint'; break;
@@ -145,20 +161,20 @@ export class Joint extends Item {
 		if(jc.mPosition1) jc.mPosition1.fromArray(posA);
 		if(jc.mPosition2) jc.mPosition2.fromArray(posB);
 
-		if(jc.mAxisX1) jc.mAxisX1.fromArray(axisA);
-		if(jc.mAxisY1) jc.mAxisY1.fromArray(perpAxisA);
+		if(jc.mAxisX1) jc.mAxisX1.fromArray(axisX1);
+		if(jc.mAxisX2) jc.mAxisX2.fromArray(axisX2);
 
-		if(jc.mAxisX2) jc.mAxisX2.fromArray(axisB);
-		if(jc.mAxisY2) jc.mAxisY2.fromArray(perpAxisB);
+		if(jc.mAxisY1) jc.mAxisY1.fromArray(axisY1);
+		if(jc.mAxisY2) jc.mAxisY2.fromArray(axisY2);
 
-		if(jc.mHingeAxis1) jc.mHingeAxis1.fromArray(axisA);
-		if(jc.mHingeAxis2) jc.mHingeAxis2.fromArray(axisB);
+		if(jc.mHingeAxis1) jc.mHingeAxis1.fromArray(axisX1);
+		if(jc.mHingeAxis2) jc.mHingeAxis2.fromArray(axisX2);
 
-		if(jc.mSliderAxis1) jc.mSliderAxis1.fromArray(axisA);
-		if(jc.mSliderAxis2) jc.mSliderAxis2.fromArray(axisB);
+		if(jc.mSliderAxis1) jc.mSliderAxis1.fromArray(axisX1);
+		if(jc.mSliderAxis2) jc.mSliderAxis2.fromArray(axisX2);
 
-		if(jc.mNormalAxis1) jc.mNormalAxis1.fromArray(perpAxisA);
-		if(jc.mNormalAxis2) jc.mNormalAxis2.fromArray(perpAxisB);
+		if(jc.mNormalAxis1) jc.mNormalAxis1.fromArray(axisX2);
+		if(jc.mNormalAxis2) jc.mNormalAxis2.fromArray(axisY1);
 
 
 		// 0 local position 1 world position 
@@ -216,6 +232,7 @@ export class Joint extends Item {
 		j.type = this.type;
 		j.mode = mode;
 		j.visible = o.visible !== undefined ? o.visible : true;
+		
 
 		//j.SetEnabled(true);
 		
@@ -238,18 +255,9 @@ export class Joint extends Item {
 
 		if( o.enable !== undefined ) j.SetEnabled(o.enable);
 
-		// num step
-		if(o.step){
-			j.SetNumPositionStepsOverride(o.step[0])
-			j.SetNumVelocityStepsOverride(o.step[1])
-		}
-		if(o.positionStep !== undefined ) j.SetNumPositionStepsOverride(o.positionStep)
-		if(o.velocityStep !== undefined ) j.SetNumVelocityStepsOverride(o.velocityStep)
-
-
-		//console.log(j.GetNumPositionStepsOverride(),j.GetNumVelocityStepsOverride())
-
-
+		// what is that ?
+		//j.jc.mNumPositionStepsOverride = 10
+		//j.jc.mNumVelocityStepsOverride = 10
 
 		switch( j.mode ){
 
@@ -309,22 +317,27 @@ export class Joint extends Item {
 			case "generic": case "ragdoll":
 			if( o.lm ){
 
+				//this.setLimit( o.lm )
+
 				this.min.set(0,0,0)
 				this.max.set(0,0,0)
 				this.Rmin.set(0,0,0)
 				this.Rmax.set(0,0,0)
+
+
 
 				let i = o.lm.length;
 				while(i--){
 					//this.setLimit( j, [o.lm[i][1], o.lm[i][2]], this.convert[ o.lm[i][0] ] )
 					this.setLimit( o.lm[i] )
 				}
+
+				console.log(this.min, this.max)
 				//j.IsFixedAxis(0)
 				//j.IsFixedAxis(1)
 				//j.IsFreeAxis(EAxis)
 				j.SetTranslationLimits( this.min, this.max );
 				j.SetRotationLimits( this.Rmin, this.Rmax );
-
 
 				
 				//j.SetLimitsSpringSettings(	EAxis,  SpringSettings )
@@ -343,13 +356,28 @@ export class Joint extends Item {
 
 	setLimit( limit ){
 
-		if(limit[0] === 'x') {this.min.SetX(limit[1]); this.max.SetX(limit[2])}
-		if(limit[0] === 'y') {this.min.SetY(limit[1]); this.max.SetY(limit[2])}
-		if(limit[0] === 'z') {this.min.SetZ(limit[1]); this.max.SetZ(limit[2])}
+		/*let i = limit.length, l, n;
+		while(i--){
+			l = limit[i]
+			n = l[0]
+			if(n==='x') j.SetLimitedAxis(Jolt.SixDOFConstraintSettings_EAxis_TranslationX, -0.1, 0.1);
+		}*/
 
-		if(limit[0] === 'rx') {this.Rmin.SetX(limit[1]*torad); this.Rmax.SetX(limit[2]*torad)}
-		if(limit[0] === 'ry') {this.Rmin.SetY(limit[1]*torad); this.Rmax.SetY(limit[2]*torad)}
-		if(limit[0] === 'rz') {this.Rmin.SetZ(limit[1]*torad); this.Rmax.SetZ(limit[2]*torad)}
+		const lim = this.convert[ limit[0] ]
+		const isAngle = this.angulars.indexOf( lim ) !== -1 ? torad : 1;
+		let axe = isAngle !== 1 ? lim.substring(1) : lim
+
+		//console.log(axe)
+
+		if(isAngle !== 1 ){
+			this.Rmin[axe] = limit[1]*isAngle 
+		    this.Rmax[axe] = limit[2]*isAngle;
+		} else {
+			this.min[axe] = limit[1] 
+		    this.max[axe] = limit[2];
+		}
+
+		
 
 	}
 

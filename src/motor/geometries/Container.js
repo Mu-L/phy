@@ -78,8 +78,6 @@ export class Container {
 
 		}
 
-		
-
 		if( this.isCompound ){
 			let mesh = null;
 			if( this.remplace ){
@@ -88,8 +86,9 @@ export class Container {
 
 				if(o.material){
 					if(o.material === 'debug'){ 
-						mesh = new BoxHelper( mesh, o.color );
-						o.material = 'line'
+						mesh = new BoxHelper( mesh, o.color, o.alpha );
+						delete o.material
+						//o.material ='line'
 					}
 				}
 

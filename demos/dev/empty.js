@@ -22,6 +22,13 @@ function demo() {
     })
 
     let Q = math.quatFromEuler([-180,0,-90])
+    //let Q = math.quatFromEuler([45,45,0])
+
+    let r1 = math.Mat3FromQuatArrayThree(Q)
+    let r2 = math.Mat3FromQuatArray(Q)
+
+    console.log(r1)
+    console.log(r2)
 
     phy.add({name:'b1', type:'box', pos:[-0.5,2,0], size:[0.25,0.5,0.25], rot:[0,0,0]})
     phy.add({name:'b2', type:'box', pos:[0.5,2,0], size:[0.5,0.5,0.5], material:'glass_red', mass:1, neverSleep:true, radius:0.02})

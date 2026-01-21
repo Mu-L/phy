@@ -7,13 +7,16 @@ let time = 1000;
 let tween = null;
 let graph = null;
 
-const setting = { name:'', speed:0.2, r };
+const setting = { name:'', speed:0.75, r };
 
 demo = () => {
 
     phy.view({ phi:30, theta:0, distance:12, x:0, y:1, z:0, fov:70, envmap:'small', envblur: 0.5, reflect:0.5 })
 	phy.set({ full:true, substep:1, gravity:[0,-9.81, 0 ], fps:60, ccd:true, fixe:true })
+
+    // define material
     phy.material({ name:'noctua', roughness: 0.5, metalness: 0, color:0x551705 })
+    // load fan model
     phy.load(['./assets/models/fan.glb'], onComplete )
 
 }
@@ -29,8 +32,8 @@ const onComplete = () => {
 
     // gui
     let gui = phy.gui();
-    gui.add( setting, 'speed', { min:0, max:1, mode:0, h:30 } )
-    gui.add( setting, 'name', { type:'grid', values:['position', 'rotation'], selectable:true } ).onChange( click )
+    gui.add( setting, 'speed', { rename:'Speed', min:0, max:1, mode:2, h:30 } )
+    gui.add( setting, 'name', { type:'grid', values:['Position', 'Rotation'], selectable:true, h:30 } ).onChange( click )
   
 }
 
@@ -41,32 +44,29 @@ const click = (name) => {
     if(tween) TWEEN.remove(tween);
 
     switch(name){
-        case 'position': demo_position(); break;
-        case 'rotation': demo_rotation(); break;
+        case 'Position': demo_position(); break;
+        case 'Rotation': demo_rotation(); break;
     }
 
 }
 
 const update = () => {
 
-    //let dt = phy.getDelta();
-
-
-    if( setting.name === 'rotation' ){
+    if( setting.name === 'Rotation' ){
         r -= (setting.speed*5)
         phy.change( { name:'fan', rot:[0,r,0] } )
     }
-
 
 }
 
 const demo_position = () => {
 
-    setting.name = 'position'
+    setting.name = 'Position'
 
     let demoData = [];
-    demoData.push({ type:'container', material:'debug', size:[10,3,10], pos:[0,1.5,0], friction:0.5, restitution:0, remplace:true, wall:10, radius:0, intern:true, color:0x000000 });
-    demoData.push({ name:'mobile', type:'box', radius:0.05, size:[1,3,1],  pos:[0,1.5,0], material:'noctua',  kinematic:true })
+    demoData.push({ type:'container', material:'debug', size:[10,3,10], pos:[0,1.5,0], friction:0.5, restitution:0, remplace:true, wall:10, radius:0, intern:true, color:0x000000, alpha:0.2 });
+    //demoData.push({ name:'mobile', type:'box', radius:0.05, size:[1,3,1],  pos:[0,1.5,0], material:'noctua',  kinematic:true })
+    demoData.push({ name:'mobile', type:'cylinder', radius:0.05, size:[0.5,3],  pos:[0,1.5,0], material:'noctua',  kinematic:true })
     let i = 1000;
     while(i--){
         demoData.push({ instance:'ball', type:'sphere', size:[math.rand(0.1,0.25)], pos:[math.rand(-4.5,4.5), 0.4, math.rand(-4.5,4.5) ], mass:1, material:'body', speedMat:true, bullet:true })
@@ -84,7 +84,7 @@ const goto = () => {
     let time =  1100 - (setting.speed*1000);
     let p, x, z
 
-    if(setting.name === 'position'){
+    if(setting.name === 'Position'){
         let x = math.rand(-4.5,4.5);
         let z = math.rand(-4.5,4.5);
         let p = phy.byName('mobile').position.clone();
@@ -109,13 +109,10 @@ const pause = () => {
 
 const demo_rotation = () => {
 
-    setting.name = 'rotation'
+    setting.name = 'Rotation'
 
     const model = phy.getMesh('fan')
     const shapes = [];
-
-    //let mat = phy.material({ name:'noctua', roughness: 0.5, metalness: 0, color:0x551705 })
-    //model.fan.children[0].material = mat;
 
     let i = 7
     let r = 360/7

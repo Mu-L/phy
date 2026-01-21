@@ -204,7 +204,7 @@ export class Joint extends Item {
 		j.mode = mode;
 		j.visible = false; 
 
-		console.log(j)
+		//console.log(j)
 
 		//if( j.mode ==='Generic' ) console.log( j.getAxisY() )
 

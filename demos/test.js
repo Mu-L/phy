@@ -13,6 +13,7 @@ demo = () => {
     phy.view({ theta:-25, distance:30, x:0, ground:true, envmap:'clear' });
     phy.set({ substep:1, gravity:[0,-9.81,0] });
 
+    // add simple gui
     let gui = phy.gui();
     gui.add( setting, 'name', { type:'grid', values:list, selectable:true, h:26 } ).listen().onChange( click )
     gui.add( setting, 'gravity', { min:-30, max:0, mode:2 } ).onChange( (v) => { phy.setGravity([0,v,0]) } )
@@ -29,7 +30,6 @@ onComplete = () => {
     data.wood.mesh = meshes.wood_floor;
     data.wall.mesh = meshes.wood_wall;
     data.stone.mesh = meshes.stone;
-
     run();
 
 }

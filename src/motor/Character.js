@@ -33,7 +33,6 @@ export class Character extends Item {
 
 			s = this.list[i];
 			n = N + ( i * this.num );
-
 			if(s) s.step( AR, n );
 
 		}

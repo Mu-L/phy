@@ -204,9 +204,9 @@ const M = {
     //  MATRIX3
     //-----------------------
 
-    Mat3FromQuatArray: ( q ) => {
+    Mat3FromQuatArrayThree: ( q ) => {
 
-        /*const x = q[0], y = q[1], z = q[2], w = q[3];
+        const x = q[0], y = q[1], z = q[2], w = q[3];
         const x2 = x + x, y2 = y + y, z2 = z + z;
         const xx = x * x2, xy = x * y2, xz = x * z2;
         const yy = y * y2, yz = y * z2, zz = z * z2;
@@ -223,8 +223,19 @@ const M = {
 
         let r20 = ( xz + wy ) * sz;
         let r21 = ( yz - wx ) * sz;
-        let r22 = ( 1 - ( xx + yy ) ) * sz;*/
+        let r22 = ( 1 - ( xx + yy ) ) * sz;
 
+        let d = [
+            [r00, r01, r02], 
+            [r01, r11, r12],
+            [r20, r21, r22]
+        ]
+
+        return d;
+
+    },
+
+    Mat3FromQuatArray: ( q ) => {
 
         let q0 = q[3];//w
         let q1 = q[0];//x
@@ -246,64 +257,13 @@ const M = {
         let r21 = 2 * (q2 * q3 + q0 * q1)
         let r22 = 2 * (q0 * q0 + q3 * q3) - 1
 
-        // ROW
-        /*let d = [
-            [r00, r01, r02], 
-            [r01, r11, r12],
-            [r20, r21, r22]
-        ]*/
-
-        // COL
         let d = [
             [r00, r10, r20], // axe X
             [r01, r11, r21], // axe y
             [r02, r12, r22]  // axe z
         ]
 
-        //return d;
-
-        // METHODE 2 ?? 
-        
-
-        /*let x = q[0];
-        let y = q[1];
-        let z = q[2];
-        let w = q[3];
-
-        let x2 = 2 * x;
-        let y2 = 2 * y;
-        let z2 = 2 * z;
-
-        let xx = x * x2;
-        let yy = y * y2;
-        let zz = z * z2;
-        let xy = x * y2;
-        let yz = y * z2;
-        let xz = x * z2;
-        let wx = w * x2;
-        let wy = w * y2;
-        let wz = w * z2;*/
-
-        // ROW
-        /*let d = [
-            [1 - yy - zz, xy - wz, xz + wy], 
-            [xy + wz, 1 - xx - zz, yz - wx],
-            [xz - wy, yz + wx, 1 - xx - yy]
-        ]*/
-        // COL
-        /*let d = [
-            [1 - yy - zz, xy + wz, xz - wy], 
-            [ xy - wz, 1 - xx - zz, yz + wx],
-            [xz + wy, yz - wx, 1 - xx - yy]
-        ]*/
-
-        //console.log(d,d2)
-
-
-
-
         return d;
-        
 
     },
 

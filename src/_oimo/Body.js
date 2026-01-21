@@ -417,6 +417,9 @@ export class Body extends Item {
 	    		
 	    		if(b.isKinematic){
 
+	    			//b.setPosition( this.v.fromArray( o.pos ) )
+
+	    			/**/
 	    			let pp = MathTool.subArray(o.pos, b.pos)
 	    			pp = MathTool.mulArray(pp, root.invDelta)
 	    			b.setLinearVelocity( this.v.fromArray( pp ) )

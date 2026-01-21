@@ -1,6 +1,6 @@
 //import * as UIL from 'uil';
 import * as UIL from '../libs/uil.module.js'
-import { Shader } from './Shader.js';
+//import { Shader } from './Shader.js';
 
 
 
@@ -59,7 +59,7 @@ export class Gui {
 
 		}
 
-		const ui = new UIL.Gui({ colors:colors })
+		const ui = new UIL.Gui({ colors:colors, w:200 })
 		ui.add( 'title',  { name:'AVATAR 3.0', h:30, align:'center' })
 
 		//ui.add('button', { name:'EXPORT ANIMATION', h:30 }).onChange( function (b){ ref.export(); } )
@@ -76,7 +76,7 @@ export class Gui {
 		ui.add( 'bool', { name:'ADD CLONE', onName:'REMOVE CLONE', value:false, mode:1 }).onChange( function (b){ fun(b); } )
 		
 
-		this.groupMaterial = ui.add('group', { name:'MATERIAL', h:30 })
+		/*this.groupMaterial = ui.add('group', { name:'MATERIAL', h:30 })
 
 		let setting = Shader.setting()
 
@@ -118,13 +118,13 @@ export class Gui {
 		this.groupMaterial.add(ref.setting, 'equationA', { type:'list', list:['add', 'sub', 'rsub', 'min', 'max'] }).onChange( function (b){ ref.setBlending(); } )
 		this.groupMaterial.add(ref.setting, 'blendSrcA', { type:'list', list:l2, full:true }).onChange( function (b){ ref.setBlending(); } )
 		this.groupMaterial.add(ref.setting, 'blendDstA', { type:'list', list:l3, full:true }).onChange( function (b){ ref.setBlending(); } )*/
-		this.groupMaterial.add(ref.setting, 'alphaTest', { min:0, max:1 }).onChange( function (b){ ref.setMaterial(); this.upMaterial(ref.setting);}.bind(this) )
+		/*this.groupMaterial.add(ref.setting, 'alphaTest', { min:0, max:1 }).onChange( function (b){ ref.setMaterial(); this.upMaterial(ref.setting);}.bind(this) )
 		this.groupMaterial.add(ref.setting, 'h_metal', { min:0, max:1 }).onChange( function (b){ ref.setMaterial(); this.upMaterial(ref.setting);}.bind(this) )
 		this.groupMaterial.add(ref.setting, 'h_rough', { min:0, max:1 }).onChange( function (b){ ref.setMaterial(); this.upMaterial(ref.setting);}.bind(this) )
 
 
 
-		
+		*/
 		this.groupAnim = ui.add('group', { name:'ANIMATION', h:30 })
 
 		//g0.add( ref, 'animations', { type:'list', h:20 })//.listen()

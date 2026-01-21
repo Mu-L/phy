@@ -537,7 +537,7 @@ export class Body extends Item {
 		// if engine don't have massCenter option
 		// is convert to compound
 		
-		if( o.massCenter && WithMassCenter.indexOf(this.engine) ===-1 ){
+		if( o.massCenter && WithMassCenter.indexOf(this.engine) === -1 ){
 			if( o.type !== 'compound' ){
 				//o.localPos = o.massCenter
 				o.shapes = [{ type:o.type, pos:o.massCenter, size:o.size }];

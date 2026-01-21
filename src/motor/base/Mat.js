@@ -418,7 +418,7 @@ export class Mat {
 			    case 'chrome': m = this.create({ name:'chrome', color:Colors.chrome, specularColor:Colors.chromeSpec, metalness: 1, roughness:0.075 }); break
 			    case 'silver': m = this.create({ name:'silver', color:0xAAAAAA, metalness: 0.8, roughness:0.22 }); break
 			    case 'gold': m = this.create({ name:'gold', color:Colors.gold, specularColor:Colors.gold2, metalness: 1, roughness:0.02 }); break
-			    case 'copper': m = this.create({ name:'copper', color:Colors.copper, metalness: 1, roughness:0.05 }); break
+			    case 'copper': m = this.create({ name:'copper', color:Colors.copper, metalness: 1, roughness:0.20 }); break
 			    case 'titanium': m = this.create({ name:'titanium', color:Colors.titanium, metalness: 1.0, roughness:0, specularColor:Colors.titaniumSpec }); break
 
 

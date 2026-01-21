@@ -1,5 +1,7 @@
 demo = () => {
 
+    phy.view({ envmap:'river', d:8, y:3, phi:10, theta:-30 })
+
     // setting and start oimophysics
     phy.set( { substep:2, gravity:[0,-10,0] })
 
@@ -7,11 +9,12 @@ demo = () => {
     phy.add({ type:'plane', size:[ 300,1,300 ], visible:false })
 
     // add gears
+    createGear( [6, 4, -0.5], 3.1, 0.1 )
     createGear( [1, 3, 0.5], 1.0, 0.5 )
     createGear( [3, 3, 0.5], 1.0, 0.5 )
     createGear( [-0.5, 3, 0], 0.5, 1.6 )
     createGear( [1.5, 3, -0.5], 1.5, 0.5 )
-    createGear( [-2, 3, 0], 1.0, 0.3, [ 180, 180 ])
+    createGear( [-2, 3, 0], 1.0, 0.3, [ 120, 360000 ])
     createGear( [-3.5, 3, 0], 0.5, 0.3 )
 
     // add random object
@@ -27,7 +30,6 @@ createGear = ( center, radius, thickness, lm ) => {
 
     lm = lm || null
 
-    let local = false
     let toothInterval = 0.4
     let toothLength = toothInterval / 1.5
     let numTeeth = Math.round( ( Math.PI * 2 ) * radius / toothInterval) + 1
@@ -45,12 +47,12 @@ createGear = ( center, radius, thickness, lm ) => {
         shapes.push( { type:'convex', v:toothVertices, rot:[0, r * i, 0 ], margin:0.001, restitution:0 })
     }
 
-    let g = phy.add({ type:'compound', shapes:shapes, pos:center, density:1, restitution:0, friction:0.5, rot:[-90,0,0], margin:0.01, neverSleep:true, material:'copper' })
-    //let f = phy.add({ type:'cylinder', size:[ toothInterval / 4, (thickness * 0.52)*2 ], pos:center, density:0, rot:[-90,0,0], restitution:0, friction:0.5 })
-    let f = phy.add({ type:'sphere', size:[ toothInterval / 4 ], pos:center, density:0, rot:[-90,0,0] })
+    let g = phy.add({ type:'compound', shapes:shapes, pos:center, density:10, restitution:0, friction:0.5, rot:[-90,0,0], margin:0.01, neverSleep:true, material:lm?'titanium':'copper' })
+    let f = phy.add({ type:'cylinder', size:[ toothInterval / 4, (thickness * 0.52)*2 ], pos:center, density:0, rot:[-90,0,0], restitution:0, friction:0, material:lm?'titanium':'copper' })
+    //let f = phy.add({ type:'sphere', size:[ toothInterval / 4 ], pos:center, density:0, rot:[-90,0,0] })
 
-    if( local ) phy.add({ type:'joint', mode:'revolute', b1:f.name, b2:g.name, pos1:[0,0,0], pos2:[0,0,0], axis1:[0,1,0], axis2:[0,1,0], motor:lm, iteration:2, friction:0 })
-    else phy.add({ type:'joint', mode:'revolute', b1:f.name, b2:g.name, worldAnchor:center, worldAxis:[0,0,1], motor:lm, friction:1  })
+   
+    phy.add({ type:'joint', mode:'revolute', b1:f.name, b2:g.name, worldAnchor:center, worldAxis:[0,0,1], motor:lm, friction:0  })
 
 }
 

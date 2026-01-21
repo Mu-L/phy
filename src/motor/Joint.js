@@ -242,7 +242,7 @@ export class Joint extends Item {
 
 
 		if( this.engine === 'HAVOK' || this.engine === 'JOLT' ){ 
-			//o.quat1 = MathTool.quatNomalize(o.quat1)
+			
 			let m31 = MathTool.Mat3FromQuatArray( o.quat1 )
 			let m32 = MathTool.Mat3FromQuatArray( o.quat2 )
 

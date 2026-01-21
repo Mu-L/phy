@@ -37,6 +37,7 @@ import { Grass } from './extra/Grass.js';
 import { AutoRagdoll } from './character/AutoRagdoll.js';
 
 import { Container } from './geometries/Container.js';
+import { Torus } from './geometries/Torus.js';
 
 import { RayCar } from './vehicles/RayCar.js';
 import { Helicopter } from './vehicles/Helicopter.js';
@@ -1179,6 +1180,7 @@ export class Engine {
 			if( o.isObject3D ) return this.addDirect( o );
 			if( o.constructor === Array ) return this.adds( o, direct );
 			if( o.type === 'container' ) return new Container( o, this );
+			if( o.type === 'torus' || o.type === 'donut' ) return new Torus( o, this );
 			
 			if( o.bounce !== undefined ) o.restitution = o.bounce;
 			if( o.type === undefined ) o.type = 'box';

@@ -18,6 +18,10 @@ function demo() {
 
     // config physics setting
     phy.add({ type:'plane', visible:false });
+
+    //phy.add({ type:'sphere', size:[1], pos:[0,1,0] });
+    //phy.add({ type:'torus', pos:[0,1,0], material:'debug' });
+    phy.add({ type:'torus', pos:[0,1,0], mass:10 });
     
     phy.add({ type:'box', size:[1,3,2], pos:[-4,1.5,0], density:0 });
 

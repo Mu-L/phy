@@ -11,7 +11,6 @@ export class Container {
 	constructor ( o = {}, motor ) {
 
 		this.motor = motor;
-
 		this.isCompound = true;
 		this.remplace = o.remplace || false;
 		this.init(o);

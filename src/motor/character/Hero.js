@@ -88,15 +88,55 @@ export class Hero extends Object3D {
 			slopeDownExtraForce: 0.2,
 			// AutoBalance Force setups
 			autoBalance: true,
-			autoBalanceSpringK: 1.2,//0.3,
-			autoBalanceDampingC: 0.04,
-			autoBalanceSpringOnY: 0.7,
-			autoBalanceDampingOnY: 0.05,
+			autoBalanceSpringK: 0.3,//1.2,//0.3,
+			autoBalanceDampingC: 0.03,//0.04,
+			autoBalanceSpringOnY: 0.5, //0.7,
+			autoBalanceDampingOnY: 0.015,//0.05,
 			// Animation temporary setups
 			animated: false,
 			mode:null,
 
 			//...o
+
+		}
+
+		const cc = {
+			speed:'#FF9900',
+			jump:'#00FF99',
+			ray:'#00FFFF',
+			balance:'#0099FF'
+		}
+
+		this.optionGui = {
+			// speed
+			maxVelLimit:{ min:0, max:10, step:0.01, color:cc.speed },
+			turnVelMultiplier:{ min:0, max:1, step:0.01, color:cc.speed },
+			turnSpeed:{ min:5, max:30, step:0.1, color:cc.speed },
+			sprintMult:{ min:1, max:5, step:0.01, color:cc.speed },
+			// jump
+			jumpVel:{ min:0, max:10, step:0.01, color:cc.jump },
+			jumpForceToGroundMult:{ min:0, max:80, step:0.1, color:cc.jump },
+			slopJumpMult:{ min:0, max:1, step:0.01, color:cc.jump },
+			sprintJumpMult:{ min:1, max:3, step:0.01, color:cc.jump },
+			airDragMultiplier:{ min:0, max:1, step:0.01, color:cc.jump },
+
+			dragDampingC:{ min:0, max:0.5, step:0.01 },
+			accDeltaTime:{ min:0, max:50, step:1 },
+			rejectVelMult:{ min:0, max:10, step:0.1 },
+			moveImpulsePointY:{ min:0, max:3, step:0.1 },
+			camFollowMult:{ min:0, max:15, step:0.1 },
+			//ray
+			rayHitForgiveness:{ min:0, max:0.5, step:0.01, color:cc.ray },
+			rayLength:{ min:0, max:radius+10, step:0.01, color:cc.ray },
+			floatingDis:{ min:0, max:radius+2, step:0.01, color:cc.ray },
+			springK:{ min:0, max:5, step:0.01, color:cc.ray },
+			dampingC:{ min:0, max:3, step:0.01, color:cc.ray },
+			// balance
+			autoBalance:{ rename:'Balance', type:'bool', color:cc.balance },
+			autoBalanceSpringK:{ rename:'B spring K', min:0, max:5, step:0.01, color:cc.balance },
+			autoBalanceDampingC:{ rename:'B damp C', min:0, max:0.1, step:0.001, color:cc.balance },
+			autoBalanceSpringOnY:{ rename:'B spring Y', min:0, max:5, step:0.01, color:cc.balance },
+			autoBalanceDampingOnY:{ rename:'B damp Y', min:0, max:0.1, step:0.001, color:cc.balance },
 
 		}
 
@@ -130,12 +170,21 @@ export class Hero extends Object3D {
 
 			// slope
 			slopeAngle:null,
-			actualSlopeNormal: new Vector3(),
 			actualSlopeAngle:null,
 			actualSlopeNormalVec: new Vector3(),
 			floorNormal: new Vector3(0, 1, 0),
 			slopeRayOriginRef: new Vector3(),
 			slopeRayorigin: new Vector3(),
+
+			// autoBalance
+			modelFacingVec: new Vector3(),
+			bodyFacingVec: new Vector3(),
+			bodyBalanceVec: new Vector3(),
+			bodyBalanceVecOnX: new Vector3(),
+			bodyFacingVecOnY: new Vector3(),
+			bodyBalanceVecOnZ: new Vector3(),
+			vectorY: new Vector3(0, 1, 0),
+			vectorZ: new Vector3(0, 0, 1),
 
 			canJump:false,
 			isFalling:false,
@@ -165,7 +214,7 @@ export class Hero extends Object3D {
 
 		this.radius = radius;
 		this.height = height;
-		this.mass = o.mass || 0.84;
+		this.mass = o.mass || 1//0.84;
 		
 		delete o.radius;
 
@@ -262,7 +311,7 @@ export class Hero extends Object3D {
 			pos: o.pos,
 			type: 'character',
 			shapeType: o.shapeType || 'capsule',
-			density: 1,//o.density || 1,
+			//density: 1,//o.density || 1,
 			mass: this.mass, 
 			friction: o.friction !== undefined ? o.friction : 0.5,
 			angularFactor:[0,0,0],
@@ -283,12 +332,10 @@ export class Hero extends Object3D {
 		this.motor.getCharacterRef().addToWorld( this, o.id );
 
         // add capsule to physics
-        //root.post({ m:'add', o:o });
         this.motor.post({ m:'add', o:this.phyData });
 
         // add bottom RAY
         if( this.useFloating ) this.ray = this.motor.add({ type:'ray', name:this.name + '_ray', begin:[0,this.rayStart,0], end:[0,this.rayEnd, 0], callback:this.selfRay.bind(this), visible:false, parent:this.name });
-
 
         // add skinning character model
         if( o.gender ) this.addModel( o );
@@ -307,18 +354,42 @@ export class Hero extends Object3D {
 		root.motor.remove([this.name, this.name + '_ray']);
 	}*/
 
+	// https://rapier.rs/docs/user_guides/javascript/scene_queries/
+	// hit.timeOfImpact ?? 
+	//
+
     selfRay( r ){
 
+    	const o = this.option
+    	const v = this.v
+
     	if( r.hit ){ 
+
     		this.distance = r.distance; //MathTool.toFixed(r.distance-this.radius)
     		this.rayAngle = r.angle;
-    		//this.v.canJump = true;
-    		//console.log('true')
+    		v.canJump = true;
+    		this.hitPoint = r.point;
+    		this.hitObject = this.motor.byName(r.body);
+
+    		this.v.actualSlopeNormalVec.fromArray(r.normal)
+    		this.v.actualSlopeAngle = this.v.actualSlopeNormalVec.angleTo(this.v.floorNormal);
+
+    		// slope = pente 
+    		if(this.distance<o.floatingDis + 0.5){
+    			// Round the slope angle to 2 decimal places
+    			if (this.v.canJump) v.slopeAngle = Math.atan( ( o.slopeRayLength- this.distance) / o.slopeRayOriginOffest ).toFixed(2)
+    				else v.slopeAngle = 0;
+    		} else {
+    			v.slopeAngle = 0;
+    		}
+
     	} else { 
+
 	        this.distance =this.option.rayLength//maxRayDistance;
 	        this.rayAngle = 0;
-	        //console.log('false')
-	        //this.v.canJump = false;	    
+	        v.canJump = false;	
+	        this.hitObject = null;    
+
 	    }
 
     }
@@ -423,6 +494,9 @@ export class Hero extends Object3D {
 		this.fall = this.position.y < this.oy
 		this.floor = MathTool.nearEquals(this.position.y, this.oy, 0.1)
 		this.oy = this.position.y;
+
+		this.v.currentPos.copy(this.position);
+	    this.v.currentVel.copy(this.velocity);
 		
 
 		if( this.model ) {
@@ -446,8 +520,6 @@ export class Hero extends Object3D {
 			});
 
 			
-
-
 	    }
 
 		//if(this.skeletonBody) this.skeletonBody.update()
@@ -517,15 +589,51 @@ export class Hero extends Object3D {
 
 	autoBalance (){
 
-		const v = this.v;
+		const v = this.v
 		const o = this.option;
 		const r = this.rotation;
 
+		v.bodyFacingVec.set(0, 0, 1).applyQuaternion(this.quaternion)
+	    v.bodyBalanceVec.set(0, 1, 0).applyQuaternion(this.quaternion)
+
+	    v.bodyBalanceVecOnX.set(0, v.bodyBalanceVec.y, v.bodyBalanceVec.z)
+	    v.bodyFacingVecOnY.set(v.bodyFacingVec.x, 0, v.bodyFacingVec.z)
+	    v.bodyBalanceVecOnZ.set(v.bodyBalanceVec.x, v.bodyBalanceVec.y, 0)
+
+	    /*if (isModeCameraBased && slopeRayOriginRef.current) {
+	        modelEuler.y = pivot.rotation.y
+	        pivot.getWorldDirection(modelFacingVec)
+	        // Update slopeRayOrigin to new positon
+	        slopeRayOriginUpdatePosition.set(movingDirection.x, 0, movingDirection.z)
+	        camBasedMoveCrossVecOnY.copy(slopeRayOriginUpdatePosition).cross(modelFacingVec)
+	        slopeRayOriginRef.current.position.x = slopeRayOriginOffest * Math.sin(slopeRayOriginUpdatePosition.angleTo(modelFacingVec) * (camBasedMoveCrossVecOnY.y < 0 ? 1 : -1))
+	        slopeRayOriginRef.current.position.z = slopeRayOriginOffest * Math.cos(slopeRayOriginUpdatePosition.angleTo(modelFacingVec) * (camBasedMoveCrossVecOnY.y < 0 ? 1 : -1))
+	    } else {
+	        characterModelIndicator.getWorldDirection(modelFacingVec)
+	    }*/
+
+	    v.crossVecOnX.copy(v.vectorY).cross(v.bodyBalanceVecOnX);
+	    v.crossVecOnY.copy(v.modelFacingVec).cross(v.bodyFacingVecOnY);
+	    v.crossVecOnZ.copy(v.vectorY).cross(v.bodyBalanceVecOnZ);
+
 		v.dragAngForce.set(
+		    (v.crossVecOnX.x < 0 ? 1 : -1) * o.autoBalanceSpringK * (v.bodyBalanceVecOnX.angleTo(v.vectorY)) - this.angular.x * o.autoBalanceDampingC,
+		    (v.crossVecOnY.y < 0 ? 1 : -1) * o.autoBalanceSpringOnY * (v.modelFacingVec.angleTo(v.bodyFacingVecOnY)) - this.angular.y * o.autoBalanceDampingOnY,
+		    (v.crossVecOnZ.z < 0 ? 1 : -1) * o.autoBalanceSpringK * (v.bodyBalanceVecOnZ.angleTo(v.vectorY)) - this.angular.z * o.autoBalanceDampingC,
+		)
+
+		/*v.dragAngForce.set(
 		    -o.autoBalanceSpringK * r.x - this.angular.x * o.autoBalanceDampingC,
 		    -o.autoBalanceSpringK * r.y - this.angular.y * o.autoBalanceDampingOnY,
 		    -o.autoBalanceSpringK * r.z - this.angular.z * o.autoBalanceDampingC
-		)
+		)*/
+
+		// Apply balance torque impulse
+        //characterRef.current.applyTorqueImpulse(dragAngForce, true)
+        this.motor.change({
+			name:this.name,
+			angularImpulse: this.v.dragAngForce.toArray(),
+		});
 
 	}
 
@@ -539,12 +647,13 @@ export class Hero extends Object3D {
 		
 		
 
-		v.currentPos.copy(this.position);
+		//v.currentPos.copy(this.position);
+	    //v.currentVel.copy(this.velocity);
 
 		
 
 		//v.movingObjectVelocity = 
-		v.slopeAngle = 0//azimut;
+		//v.slopeAngle = 0//azimut;
 
 
 
@@ -624,19 +733,50 @@ export class Hero extends Object3D {
 
 	    v.impulseCenter.set( v.currentPos.x, v.currentPos.y + o.moveImpulsePointY, v.currentPos.z );
 
+	    /*this.motor.change({
+
+		    name:this.name,
+		    impulse: this.v.moveImpulse.toArray(), 
+		    impulseCenter: this.v.impulseCenter.toArray(),
+		    //linearVelocity:this.v.jumpDirection.toArray()
+
+		});*/
+
 	    // Character current velocity
-	    v.currentVel.copy(this.velocity);
+	    //v.currentVel.copy(this.velocity);
 
 	    // Jump impulse
 
-	    if ( key[4] && v.canJump ) {
+	    /*if ( key[4] && v.canJump ) {
 	    	v.jumpVelocityVec.set( v.currentVel.x, this.running ? o.sprintJumpMult * o.jumpVel : o.jumpVel, v.currentVel.z );
 	    	v.moveImpulse.y = v.jumpVelocityVec.y
-	    }
+	    }*/
 
 	   //v.jumpDirection.set(0, ( this.running ? o.sprintJumpMult * o.jumpVel : o.jumpVel ) * o.slopJumpMult, 0).projectOnVector(v.actualSlopeNormalVec).add(v.jumpVelocityVec)
 	    //root.motor.change({ name:this.name, linearVelocity:v.jumpDirection.toArray() });
 
+	}
+
+	jumping () {
+
+		const v = this.v;
+		const o = this.option;
+
+		//if(v.canJump) return
+
+		
+
+		//this.v.canJump = false
+
+	    v.jumpVelocityVec.set( v.currentVel.x, this.running ? o.sprintJumpMult * o.jumpVel : o.jumpVel, v.currentVel.z );
+    	v.jumpDirection.set(0, ( this.running ? o.sprintJumpMult * o.jumpVel : o.jumpVel ) * o.slopJumpMult, 0).projectOnVector(v.actualSlopeNormalVec).add(v.jumpVelocityVec)
+        
+        this.motor.change({
+
+		    name:this.name,
+		    linearVelocity:this.v.jumpDirection.toArray()
+
+		});
 	}
 
 	getFloating (){
@@ -734,8 +874,13 @@ export class Hero extends Object3D {
 
 	    if( this.useImpulse ) {
 
+	    	
+
 	    	if( this.moving ) this.moveCharacter( delta, angle );
 	    	else this.stopMoving();
+
+	    	if( this.wantJump ) this.jumping()
+	    	//else this.v.jumpDirection.copy(this.v.currentVel)
 
 	        if( this.useFloating ) this.getFloating();
 
@@ -744,6 +889,7 @@ export class Hero extends Object3D {
 			    name:this.name,
 			    impulse: this.v.moveImpulse.toArray(), 
 			    impulseCenter: this.v.impulseCenter.toArray(),
+			    //linearVelocity:this.v.jumpDirection.toArray()
 
 			});
 

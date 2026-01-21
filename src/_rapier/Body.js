@@ -214,12 +214,19 @@ export class Body extends Item {
 				bodyDesc = RAPIER.RigidBodyDesc.kinematicVelocityBased()
 				//if( o.velocityBased ) bodyDesc = RAPIER.RigidBodyDesc.kinematicVelocityBased()
 				//else bodyDesc = RAPIER.RigidBodyDesc.kinematicPositionBased()
-			} else bodyDesc = RAPIER.RigidBodyDesc.dynamic()
+			} else {
+				bodyDesc = RAPIER.RigidBodyDesc.dynamic()
+				this.setMass(bodyDesc, o);
+			}
 			break;
 			case 'solid':
 			bodyDesc = RAPIER.RigidBodyDesc.fixed()
 			break;
 		}
+
+		//console.log(bodyDesc)
+
+		
 
 		// build the rigid-body.
 		let b = root.world.createRigidBody( bodyDesc ), collider
@@ -304,6 +311,10 @@ export class Body extends Item {
 		if( b === null ) return
 
 		let autowake = o.activate ? o.activate : true;
+
+	    // https://rapier.rs/docs/user_guides/javascript/colliders#collision-groups-and-solver-groups
+		//if(o.group) b.collid.setCollisionGroups(o.group);
+	    //if(o.mask) b.collid.setSolverGroups(o.mask);
 
 	    // state
 		if( o.sleep ){ b.sleep(); autowake = false;   }
@@ -402,8 +413,21 @@ export class Body extends Item {
 
 		if( o.massInfo ) this.getMassInfo( b );
 
-		//if( o.enableCCD !== undefined ) b.setCcdEnabled( o.enableCCD );
+		if( o.bullet !== undefined ) b.setCcdEnabled( o.bullet );
 
+	}
+
+	setMass(bd, o){
+		
+
+		bd.setAdditionalMassProperties(
+			o.mass !== undefined ? o.mass : bd.mass,
+			o.massCenter ? {x:o.massCenter[0], y:o.massCenter[1], z:o.massCenter[2]} : bd.centerOfMass,
+			o.inertia ? {x:o.inertia[0], y:o.inertia[1], z:o.inertia[2]} : bd.principalAngularInertia,
+			o.inertiaOrientation? {x:o.inertiaOrientation[0], y:o.inertiaOrientation[1], z:o.inertiaOrientation[2], w:o.inertiaOrientation[3]} : bd.angularInertiaLocalFrame,
+		)
+
+		//console.log(bd)
 	}
 
 	getMassInfo(b) {

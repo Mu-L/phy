@@ -24,7 +24,8 @@ demo = () => {
 
     phy.view({
         phi:12, theta:0, distance:5, x:0, y:3, z:15, fov:55, 
-        envmap:'clear', groundReflect:0, groundColor:0x808080,
+        envmap:'night', exposure:0.25, fog:true, fogExp:0.05,
+        reflect:0.1, groundColor:0x505050,
     })
 
     //phy.lightIntensity( 6, 0, 0.7 );
@@ -33,10 +34,12 @@ demo = () => {
 
     
     // config physics setting
-    phy.set({ substep:1, gravity:[0,-9.81,0], full:true })
+    phy.set({ substep:1, gravity:[0,-9.81,0] })
 
     let g = phy.getGround();
-    g.material.map = phy.texture({ url:'./assets/textures/grid.png', repeat:[60,60] });
+    g.material.map = phy.texture({ url:'./assets/textures/grid2.png', repeat:[60,60], offset:[0.5,0.5], anisotropy:4 });
+    g.material.normalMap = phy.texture({ url:'./assets/textures/grid_n.png', repeat:[60,60], offset:[0.5,0.5], anisotropy:4 });
+    g.material.normalScale.set(0.1,-0.1)
     g.material.roughness = 0.8;
     g.material.metalness = 0;
 
@@ -66,9 +69,11 @@ const addGui = () => {
     gui = phy.gui();
 
     let option = player.option;
-    gui.add( option, 'floatingDis',{ min:0, max:2.5, mode:2});
-    gui.add( option, 'springK',{ min:0, max:5.0, mode:2});
-    gui.add( option, 'dampingC',{ min:0, max:3.0, mode:2});
+    let db = player.optionGui;
+    for(let v in db){
+        gui.add( option, v, {...db[v], h:18} );
+    }
+    
 
     gui.add(setting, 'debug',{}).onChange( showDebug );
     gui.add( 'bool', { name:'add clone', onName:'remove clone', value:false, mode:1, radius:12 }).onChange( addClone )
@@ -221,9 +226,9 @@ const addDynamicPlatforms = () => {
 
 const addFloatingPlatform = () => {
 
-    phy.add({ name:'floatingPlateRef', type:'box', size:[5,0.2,5], pos:[0,5,-10], mass:1, angularFactor:[0,0,0] })
-    phy.add({ name:'floatingPlateRef2', type:'box', size:[5,0.2,5], pos:[7,5,-10], mass:1, linearFactor:[0,1,0], angularFactor:[0,1,0] })
-    phy.add({ name:'floatingMovingPlateRef', type:'box', size:[2.5,0.2,2.5], pos:[0,5,-17], mass:1, linearFactor:[1,1,0], angularFactor:[0,1,0]  })
+    phy.add({ name:'floatingPlateRef', type:'box', size:[5,0.2,5], pos:[0,5,-10], mass:1, angularFactor:[0,0,0], getVelocity:true })
+    phy.add({ name:'floatingPlateRef2', type:'box', size:[5,0.2,5], pos:[7,5,-10], mass:1, linearFactor:[0,1,0], angularFactor:[0,1,0], getVelocity:true })
+    phy.add({ name:'floatingMovingPlateRef', type:'box', size:[2.5,0.2,2.5], pos:[0,5,-17], mass:1, linearFactor:[1,1,0], angularFactor:[0,1,0], getVelocity:true })
 
     phy.add({ type:'ray', parent:'floatingPlateRef', begin:[0,0,0], end:[0,-0.8, 0], callback:FloatingRay, visible:true })
     phy.add({ type:'ray', parent:'floatingPlateRef2', begin:[0,0,0], end:[0,-0.8, 0], callback:FloatingRay, visible:true })

@@ -76,7 +76,7 @@ export const Pool = {
     onEnd:() => {},
     log: ( msg ) => {},
 
-    materialRoot:(n) => {console.log( n )},
+    materialRoot:(n) => {/*console.log( n )*/},
 
     setLoadEvent:( onload, onend ) => {
         Pool.onLoad = onload
@@ -695,6 +695,20 @@ export const Pool = {
             .setUseLocal( Pool.useLocal )
         
         return Pool.KTX2
+
+    },
+
+    loaderGLTF2: () => {
+
+        if( !Pool.GLTF2 ){
+            Pool.GLTF2 = new GLTFLoader( Pool.manager )
+            .setCrossOrigin('anonymous')
+
+            //if(Pool.formatGltf.draco) Pool.GLTF.setDRACOLoader( Pool.loaderDRACO() )
+            //if(Pool.formatGltf.ktx2) Pool.GLTF.setKTX2Loader( Pool.loaderKTX2() )
+            //if(Pool.formatGltf.meshop) Pool.GLTF.setMeshoptDecoder( MeshoptDecoder )
+        }
+        return Pool.GLTF2
 
     },
 

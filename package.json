@@ -33,7 +33,9 @@
     "main": "rollup -c rollup/rollup.config.main.js",
     "smoke": "rollup -c rollup/extra.smoke.js",
     "bvhlab": "rollup -c rollup/extra.bvhlab.js",
+    "animlab": "rollup -c rollup/extra.animlab.js",
     "fracture": "rollup -c rollup/extra.fracture.js",
+    "speech": "rollup -c rollup/extra.speech.js",
     "wiggle": "rollup -c rollup/extra.wiggle.js",
     "codeflask": "rollup -c rollup/extra.codeflask.js",
     "phy": "rollup -c rollup/rollup.config.phy.js",
@@ -64,15 +66,14 @@
   "bugs": {
     "url": "https://github.com/lo-th/phy/issues"
   },
-  "homepage": "http://lo-th.github.io/phy/",
+  "homepage": "https://lo-th.github.io/phy/",
   "peerDependencies": {
-    "three": ">= 0.159.0"
+    "three": ">= 0.183.2"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.0",
-    "@rollup/plugin-terser": "^0.4.0",
+    "@rollup/plugin-terser": "^1.0.0",
     "magic-string": "^0.30.0",
-    "rollup": "^4.6.0",
-    "three": "^0.182.0"
+    "rollup": "^4.6.0"
   }
 }

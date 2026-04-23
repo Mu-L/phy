@@ -49,6 +49,7 @@ import { Kart } from './vehicles/Kart.js';
 import { Pool } from '../3TH/Pool.js';
 import { sk } from '../3TH/character/SkeletonExtand.js';
 import { preloadAvatar } from '../3TH/character/Avatar.js';
+import { Speech } from '../libs/speech.module.js';
 
 // extra library
 
@@ -1658,6 +1659,20 @@ export class Engine {
 		this.addWiggle = ( o = {} ) => {
 
 		   
+
+		}
+
+		//--------------------
+		//
+		//  SPEECH
+		//
+		//--------------------
+
+		this.addSpeech = ( txt = '' ) => {
+
+		   if( this.speech ) return;
+		   this.speech = new Speech(txt, "./assets/dictionary/");
+		   return this.speech
 
 		}
 

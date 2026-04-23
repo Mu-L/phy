@@ -1,15 +1,82 @@
 function demo() {
 
 	// setting and start oimophysics
-	phy.set( { substep:2, gravity:[0,-10,0] });
+	phy.set( { substep:1, gravity:[0,-2,0], ccd:true });
 
 	// add static ground
 	//phy.add({ type:'plane', size:[300,1,300], visible:false });
     phy.add({ type:'box', size:[300,1,300], pos:[0, -0.5, 0], visible:false })
 
-    phy.load(['./assets/models/simple.glb'], onComplete );
+    //phy.load(['./assets/models/simple.glb'], onComplete );
+
+    phy.load(['./assets/models/simple2.glb'], onComplete2 );
 
 }
+
+const balls = []
+function onComplete2(){
+
+    const model = phy.getMesh('simple2')
+
+    let i = 60, pos
+
+    while(i--){
+
+        pos = [math.rand( -0.5, 0.5 ), 5+i*0.6, math.rand( -0.5, 0.5)]
+        pos[0] += math.randInt( 0, 1 ) === 1 ? -2.5 : 2.5
+
+        
+        balls[i] = phy.add({ type:'sphere', size:[0.1], pos:pos, density:1, restitution:0.25, friction:0.5, bullet:true })
+
+    }
+
+    phy.add( {
+        type:'mesh',
+        shape: model['base'].geometry,
+        restitution:0.25, friction:0.5,
+        pos:[-2.5,1,0]
+        //size:[2],
+        //meshScale:[2],
+        //margin: 0.0001,
+        //density:10
+    })
+
+    phy.add( {
+        type:'convex',
+        shape: model['base'].geometry,
+        restitution:0.25, friction:0.5,
+        pos:[2.5,1,0],
+        material:'clay'
+        //size:[2],
+        //meshScale:[2],
+        //margin: 0.0001,
+        //density:10
+    })
+
+
+    phy.setPostUpdate ( onUp )
+
+    /**/
+
+   
+    
+}
+
+function onUp(){
+
+    let i = balls.length, b
+    while(i--){
+        b = balls[i]
+        if(b.position.y < 0.3){
+            let pos = [math.rand( -0.5, 0.5 ), 5+i*0.6, math.rand( -0.5, 0.5)]
+            pos[0] += math.randInt( 0, 1 ) === 1 ? -2.5 : 2.5
+            phy.change({name:b.name, pos:pos, reset:true})
+        }
+    }
+
+}
+
+
 
 function onComplete(){
 

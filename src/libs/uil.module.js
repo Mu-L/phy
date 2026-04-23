@@ -2331,6 +2331,7 @@ class Proto {
 
         this.dx = o.dx || 0;
 
+        this.isSelectMulty = o.selectmulty !== undefined ? o.selectmulty : false;
         this.isSelectable = o.selectable !== undefined ? o.selectable : false;
         this.unselectable =  o.unselect !== undefined ? o.unselect : this.isSelectable;
 
@@ -5704,6 +5705,8 @@ class List extends Proto {
         this.tmpImage = {};
         this.tmpUrl = [];
 
+        this.openItem = o.openItem || 5;
+
         this.m = o.m !== undefined ? o.m : 5;
 
 
@@ -5755,7 +5758,6 @@ class List extends Proto {
 
         this.prevName = '';
 
-        
         this.tmpId = 0;
 
         this.baseH = this.h;
@@ -6225,13 +6227,11 @@ class List extends Proto {
 
         let lng = this.hideCurrent? this.length-1 : this.length;
 
-        this.maxItem = this.full ? lng : 5;
+        this.maxItem = this.full ? lng : this.openItem;
         this.maxItem = lng < this.maxItem ? lng : this.maxItem;
 
         this.maxHeight = this.maxItem * (this.itemHeight+1) + 2;
         
-
-
         this.max = lng * (this.itemHeight+1) + 2;
         this.ratio = this.maxHeight / this.max;
         this.sh = this.maxHeight * this.ratio;
@@ -6435,7 +6435,7 @@ class List extends Proto {
 
         super.open();
 
-        this.update( 0 );
+        this.update( this.py );
 
         this.h = this.maxHeight + this.baseH + 5;
         if( !this.scroll ){

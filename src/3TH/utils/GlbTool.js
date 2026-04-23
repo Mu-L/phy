@@ -168,8 +168,6 @@ export const GlbTool = {
             if ( node.isMesh && node.name.search('__M__') !== -1){ 
             	morph[ node.name ] = node.geometry;
             	tmpMesh.push(node);
-
-
             }
         })
 

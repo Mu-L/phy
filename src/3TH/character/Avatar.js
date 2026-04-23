@@ -1,6 +1,7 @@
 import {
 	Object3D, Group, Mesh, SkinnedMesh, Texture,
     Matrix4, Quaternion, Euler, Vector3, Vector2,
+    MathUtils,
     SphereGeometry, SkeletonHelper,
     MeshStandardMaterial, MeshLambertMaterial, MeshPhongMaterial, MeshBasicMaterial,MeshPhysicalMaterial,
     TextureLoader,AnimationMixer,
@@ -18,12 +19,17 @@ import { MeshSssMaterial } from '../materials/MeshSssMaterial.js';
 
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 
+import * as TWEEN from '../../libs/tween.esm.js'
+
 import { Pool } from '../Pool.js';
-//import { Shader } from '../Shader.js';
 import { LZMA } from '../../libs/lzma.js';
 import { Tension } from '../Tension.js';
 
 import { ExoSkeleton } from './ExoSkeleton.js';
+
+import { AnimPack } from './AnimPack.js';
+import { AnimFBX } from './AnimFBX.js';
+import { AnimRetarget } from './AnimRetarget.js';
 
 // ready model
 
@@ -174,6 +180,8 @@ export class Avatar extends Group {
         this.fixToe = false;
         this.clipsToesFix = [];
 
+        this.speakGroup = null
+
         this.n = Math.round(Math.random()*1000);
 
         this.actions = new Map();
@@ -192,6 +200,10 @@ export class Avatar extends Group {
         this.tmpQ = new Quaternion();
 
         this.setting = {};
+
+        // for debug animation pack
+        this.extraMixer = null
+        this.extraAction = null
 
         //this.initMaterial();
 
@@ -250,14 +262,23 @@ export class Avatar extends Group {
     update( delta ){
 
         if( !this.done ) return;
+
+
+
         if ( this.mixer ){
 
             this.mixer.update( delta );
 
+            if(this.extraMixer) this.extraMixer.update( delta );
+
             // blink
             if( this.haveBlink ) this.eyeBlink();
-            
 
+
+            if( this.speakGroup !== null){
+                this.speakGroup.update();
+            }
+            
             if( !this.isClone ){
                 this.look( delta*10 );
                 this.breathing();
@@ -292,7 +313,7 @@ export class Avatar extends Group {
 
     eyeBlink(){
 
-        const n = this.n++ 
+        let n = this.n++ 
         let v = 0;
         let t = 10;
         let s = 1/t;
@@ -401,7 +422,6 @@ export class Avatar extends Group {
                     if(t==='map' || t.search('Map')!==-1 ) data[t] = Pool.getTexture( data[t], { quality:this.textureQuality, anisotropy:this.ref.anisotropy || 1 } );
                 }
             }
-
 
             if(type==='Basic') m = new MeshBasicMaterial( data );
             else if(type==='Standard') m = new MeshStandardMaterial( data );
@@ -789,6 +809,8 @@ export class Avatar extends Group {
         
         this.play( this.startAnimation );
 
+
+
         if( this.ref.adjustment ){
             this.makePoseTrack('adjustment', this.ref.adjustment(), true );
         }
@@ -804,6 +826,7 @@ export class Avatar extends Group {
         //setTimeout( this.callback, 100 );
         setTimeout( function(){ 
             this.add( this.root );
+            this.root.position.y = this.decalY
             this.callback();
         }.bind(this), 100 )
         //this.callback()
@@ -944,6 +967,8 @@ export class Avatar extends Group {
 
     }
 
+    /// GLB ///
+
     loadAnimationGlb( url, callback ){
 
         let name = url.substring( url.lastIndexOf('/')+1, url.lastIndexOf('.') );
@@ -961,28 +986,9 @@ export class Avatar extends Group {
         }.bind(this))
     }
 
-    loadAnimationFbx( url, callback ){
-
-        //if( !this.loaderFbx ) this.loaderFbx = new FBXLoader();
-        let name = url.substring( url.lastIndexOf('/')+1, url.lastIndexOf('.') );
-        Pool.loaderFBX().load( url, function ( node ) {
-            this.convertFbx( name, node.animations[ 0 ] );
-            if( callback ) callback();
-        }.bind(this), null, callback )
-    }
-
-    directFbx( data, name ){
-
-        //if( !this.loaderFbx ) this.loaderFbx = new FBXLoader();
-        try {
-            let node = Pool.loaderFBX().parse( data, '' )
-            this.convertFbx( name, node.animations[ 0 ], true );
-        } catch ( e ) {
-            console.error( 'bug', e );
-        }
-    }
-
     applydAnimation( glb, name ){
+
+        //console.log(name)
 
         let i = glb.animations.length, autoplay = false;
         if( i === 1 ){
@@ -995,6 +1001,210 @@ export class Avatar extends Group {
         }
 
     }
+
+    /// FBX ///
+
+    loadAnimationFbx( url, callback ){
+
+        let name = url.substring( url.lastIndexOf('/')+1, url.lastIndexOf('.') );
+        Pool.loaderFBX().load( url, function ( node ) {
+            this.getFbxAnimations( node.animations, 0 )
+            if( callback ) callback();
+        }.bind(this), null, callback )
+
+    }
+
+    directFbx( data, name ){
+
+        try {
+            let node = Pool.loaderFBX().parse( data, '' )
+            this.getFbxAnimations( node.animations, 0 )
+        } catch ( e ) {
+            console.error( 'bug', e );
+        }
+    }
+
+    getFbxAnimations( anims, auto = -1 ){
+
+        const lng = anims.length
+        for( let i = 0; i<lng; i++){
+            this.convertFbx(anims[ i ], i===auto );
+        }
+
+    }
+
+    /// RETAGET
+
+    importPack( url, debug = false ){
+
+        AnimRetarget.importPack( url, debug, this )
+
+    }
+
+    /*retargetModel( skeleton, clip ) {
+
+        this.stop();
+
+        const targetSkin = this.mesh[this.ref.skeletonRef]//targetModel.scene.children[ 0 ].children[ 1 ];
+
+        const rotateHip = new Matrix4().makeRotationX( MathUtils.degToRad( 90-15 ) )
+        const rotateAbdo = new Matrix4().makeRotationX( MathUtils.degToRad( 90-7 ) )
+        const rotateAbdo2 = new Matrix4().makeRotationX( MathUtils.degToRad( 90-7 ) )
+
+        const rotateNeck = new Matrix4().makeRotationX( MathUtils.degToRad( 90+20 ) )
+
+        const rotate90_top = new Matrix4().makeRotationX( MathUtils.degToRad( -90+5 ) );
+        const rotate90_bottom = new Matrix4().makeRotationX( MathUtils.degToRad( -90+5 ) );
+
+
+        const rotateCollarR = new Matrix4().makeRotationFromEuler( new Euler( MathUtils.degToRad( 90 ), MathUtils.degToRad( -90+25 ), MathUtils.degToRad( 7 ) ) );
+        const rotateCollarL = new Matrix4().makeRotationFromEuler( new Euler( MathUtils.degToRad( 90 ), MathUtils.degToRad( 90-25 ), MathUtils.degToRad( -7 ) ) );
+        
+
+        const rotateForeR = new Matrix4().makeRotationFromEuler( new Euler( MathUtils.degToRad( 90 ), MathUtils.degToRad( -90 ), MathUtils.degToRad( 0 ) ) );
+        const rotateForeL = new Matrix4().makeRotationFromEuler( new Euler( MathUtils.degToRad( 90 ), MathUtils.degToRad( 90 ), MathUtils.degToRad( 0 ) ) );
+
+        const rotateFingerR = new Matrix4().makeRotationZ( MathUtils.degToRad( -90 ) );
+        const rotateFingerL = new Matrix4().makeRotationZ( MathUtils.degToRad( 90 ) );
+
+        const rotate180Z = new Matrix4().makeRotationZ( MathUtils.degToRad( - 180 ) );
+        const rotate90 = new Matrix4().makeRotationX( MathUtils.degToRad( 90 ) );
+        const rotate90inv = new Matrix4().makeRotationX( MathUtils.degToRad( -90 ) );
+        const rotateFoot = new Matrix4().makeRotationX( MathUtils.degToRad( -30 ) );
+        const rotateToe = new Matrix4().makeRotationY( MathUtils.degToRad( 180 ) );
+
+        //const rotateCW45 = new Matrix4().makeRotationY( MathUtils.degToRad( 45 ) );
+        //const rotateCCW180 = new Matrix4().makeRotationY( MathUtils.degToRad( - 180 ) );
+    
+
+        const boneMap = {
+
+            hip:'pelvis',
+            abdomen:'spine_01',
+            abdomen2:'spine_02',
+            chest:'spine_03',
+            neck:'neck_01',
+            head:'Head',
+            // leg
+            rThigh:'thigh_r',
+            rShin:'calf_r',
+            rFoot:'foot_r',
+            rToes:'ball_r',
+            lThigh:'thigh_l',
+            lShin:'calf_l',
+            lFoot:'foot_l',
+            lToes:'ball_l',
+            // arm
+            rCollar:'clavicle_r',
+            rShldr:'upperarm_r',
+            rForeArm:'lowerarm_r',
+            rHand:'hand_r',
+            lCollar:'clavicle_l',
+            lShldr:'upperarm_l',
+            lForeArm:'lowerarm_l',
+            lHand:'hand_l',
+            // hand r
+            rThumb1:'thumb_01_r', rThumb2:'thumb_02_r', rThumb3:'thumb_03_r',
+            rIndex1:'index_01_r', rIndex2:'index_02_r', rIndex3:'index_03_r',
+            rMid1:'middle_01_r', rMid2:'middle_02_r', rMid3:'middle_03_r',
+            rRing1:'ring_01_r', rRing2:'ring_02_r', rRing3:'ring_03_r',
+            rPinky1:'pinky_01_r', rPinky2:'pinky_02_r', rPinky3:'pinky_03_r',
+            // hand l
+            lThumb1:'thumb_01_l', lThumb2:'thumb_02_l', lThumb3:'thumb_03_l',
+            lIndex1:'index_01_l', lIndex2:'index_02_l', lIndex3:'index_03_l',
+            lMid1:'middle_01_l', lMid2:'middle_02_l', lMid3:'middle_03_l',
+            lRing1:'ring_01_l', lRing2:'ring_02_l', lRing3:'ring_03_l',
+            lPinky1:'pinky_01_l', lPinky2:'pinky_02_l', lPinky3:'pinky_03_l',
+
+        }
+
+        let inf = 1
+
+        const retargetOptions = {
+
+            // specify the name of the source's hip bone.
+            hip: 'pelvis',
+
+            //useTargetMatrix:true,
+            //preserveBoneMatrix:false,
+            //preserveBonePositions:false,
+
+            // preserve the scale of the target model
+            scale: 1, //1.055,//.01,
+
+
+            hipPosition:new Vector3( 0, 0.05053, 0.0501 ),
+            //hipPosition:new Vector3( 0, 0.00, 0.0501 ),
+
+            // use ( 0, 1, 0 ) to ignore xz hip movement.
+            //hipInfluence: new Vector3( 0, 0, 0 ),
+            hipInfluence: new Vector3( inf, inf, inf ),
+
+            localOffsets:{
+                hip:rotateHip,
+                abdomen:rotateAbdo,
+                abdomen2:rotateAbdo2,
+                chest:rotate90,
+                neck:rotateNeck,
+                head:rotate90,
+
+                // leg
+                rThigh:rotate90_top,//rotate90inv,
+                lThigh:rotate90_top,//rotate90inv,
+                rShin:rotate90_bottom,//rotate90inv,
+                lShin:rotate90_bottom,//rotate90inv,
+                rFoot:rotateFoot,
+                lFoot:rotateFoot,
+                rToes:rotateToe,
+                lToes:rotateToe,
+
+                rCollar:rotateCollarR,
+                lCollar:rotateCollarL,
+
+                rShldr:rotateForeR,
+                lShldr:rotateForeL,
+                rForeArm:rotateForeR,
+                lForeArm:rotateForeL,
+                rHand:rotateForeR,
+                lHand:rotateForeL,
+
+                rThumb1:rotateFingerR, rThumb2:rotateFingerR, rThumb3:rotateFingerR,
+                rIndex1:rotateFingerR, rIndex2:rotateFingerR, rIndex3:rotateFingerR,
+                rMid1:rotateFingerR, rMid2:rotateFingerR, rMid3:rotateFingerR,
+                rRing1:rotateFingerR, rRing2:rotateFingerR, rRing3:rotateFingerR,
+                rPinky1:rotateFingerR, rPinky2:rotateFingerR, rPinky3:rotateFingerR,
+
+                lThumb1:rotateFingerL, lThumb2:rotateFingerL, lThumb3:rotateFingerL,
+                lIndex1:rotateFingerL, lIndex2:rotateFingerL, lIndex3:rotateFingerL,
+                lMid1:rotateFingerL, lMid2:rotateFingerL, lMid3:rotateFingerL,
+                lRing1:rotateFingerL, lRing2:rotateFingerL, lRing3:rotateFingerL,
+                lPinky1:rotateFingerL, lPinky2:rotateFingerL, lPinky3:rotateFingerL,
+            },
+
+            // Map of target's bone names to source's bone names -> { targetBoneName: sourceBoneName }
+            getBoneName: function ( bone ) {
+
+                return boneMap[bone.name]//'mixamorig' + bone.name;
+
+            }
+
+        };
+
+        //const retargetedClip = SkeletonUtils.retargetClip( targetSkin, sourceModel.skeleton, sourceModel.clip, retargetOptions );
+        const retargetedClip = SkeletonUtils.retargetClip( targetSkin, skeleton, clip, retargetOptions );
+
+
+        //const mixer = new THREE.AnimationMixer( targetSkin );
+        //mixer.clipAction( retargetedClip ).play();
+
+        const action = this.mixer.clipAction( retargetedClip );
+        action.play();
+
+        //return mixer;
+
+    }*/
+
+    ///
 
     addClip( clip, additive = false ){
 
@@ -1012,19 +1222,24 @@ export class Avatar extends Group {
 
 
         //clip.optimize();
+        //console.log(clip)
         Pool.clip.push( clip );
     }
 
-    addAction( clip, play ){
+    addAction( clip, play = false ){
 
         const action = this.mixer.clipAction( clip );
         action.frameMax = Math.round( clip.duration * FrameTime );
-        action.play();
-        action.enabled = true//false;
+        
+        
         if(clip.name.search('idle')!==-1) action.enabled = true;
         //action.setEffectiveWeight( 0 );
         if( clip.name === 'Jumping Up' ) action.loop = LoopPingPong;
-        
+
+        action.setEffectiveTimeScale( 1 );
+        action.setEffectiveWeight( 0 );
+        action.play();
+        action.enabled = false;
         //action.play()
         this.actions.set( clip.name, action );
 
@@ -1042,7 +1257,7 @@ export class Avatar extends Group {
 
         if( window.gui && window.gui.getAnimation ) window.gui.getAnimation();
 
-       // if( play ) this.play( clip.name )
+        if( play ) this.play( clip.name )
 
              
     }
@@ -1146,54 +1361,46 @@ export class Avatar extends Group {
 
     }
 
-    convertFbx( name, anim, autoplay ) {
 
-        const torad = Math.PI / 180;
-        let lockPosition = true;
-        let p = new Vector3();
-        let q = new Quaternion();
-        let RX = new Quaternion().setFromAxisAngle({x:1, y:0, z:0}, 90 * torad );
+    directGlbTest( data, name ){
 
-        const baseTracks = anim.tracks;
-        const tracks = [];
+        Pool.loaderGLTF().parse( data, '', function ( glb ) {
+            this.stop();
 
-        let i = baseTracks.length, j, n, t, b, k = 0;
+            console.log(glb.scene)
+            
 
-        while(i--){
-            t = baseTracks[k];
-            b = t.name.substring(0, t.name.lastIndexOf('.') );
+            /*glb.scene.traverse( ( child ) => {
 
-            if( t.name === 'hip.position' ){
-                let rp = []
-                j = t.values.length / 3;
-                while(j--){
-                    n = j * 3;
-                    if( lockPosition ) p.set( t.values[n], t.values[n+1], 0).multiplyScalar(0.01);
-                    else p.set( t.values[n], t.values[n+1], t.values[n+2]).multiplyScalar(0.01);
-                    p.toArray( rp, n );
-                }
-                tracks.push( new VectorKeyframeTrack( t.name, t.times, rp ) );
+                if(child.name = 'pelvis')console.log(child)
+            })*/
 
-            } else {
-                let rq = []
-                j = t.values.length / 4 
-                while(j--){
-                    n = j * 4
-                    if( b==='hip') q.set(t.values[n], t.values[n+1], t.values[n+2], t.values[n+3]).multiply( RX );
-                    else q.set(t.values[n], t.values[n+2], -t.values[n+1], t.values[n+3]);
-                    q.toArray( rq, n );
-                }
-                tracks.push( new QuaternionKeyframeTrack( t.name, t.times, rq ) );
-            }
-            k++;
-        }
+            //console.log(glb.animations)
 
-        let clip = new AnimationClip( name, -1, tracks );
-        clip.duration = anim.duration;
+            
+            this.convertGlbAnimation( glb.animations[58] ); //idle_loop
+            this.convertGlbAnimation( glb.animations[65] ); //interact
+            this.convertGlbAnimation( glb.animations[126] ); //walk_loop
+            this.convertGlbAnimation( glb.animations[0] );
+            //this.applydAnimation( glb, name );
+        }.bind(this))
+    }
 
-        //console.log( name, anim.duration )
+    convertGlbAnimation(anim, autoplay = false){
 
+        const clip = AnimPack.convertAnimation(anim)
 
+        this.stop();
+        this.addClip( clip, false );
+        this.addAction( clip, autoplay );
+
+    }
+
+    convertFbx( anim, autoplay = false ) {
+
+        const clip = AnimFBX.convertAnimation(anim);
+
+        //clip.optimize();
 
         this.stop();
         this.addClip( clip );
@@ -1403,13 +1610,20 @@ export class Avatar extends Group {
     play( name, fade = 0.5 ) {
 
         let action = this.getAction( name );
+
+
         if ( !action ) return false;
+
+
 
         if( !this.current ){
             this.stop()
             this.current = action;
+            action.enabled = true
+
             //action.play();
             action.setEffectiveWeight( 1 );
+            //console.log(this.current)
         } else {
 
             if( this.current !== action ){
@@ -1460,14 +1674,22 @@ export class Avatar extends Group {
             }
         } 
 
+        if(this.extraAction && this.current){
+            this.extraAction.forEach( function ( action ) { action.setEffectiveWeight( 0 ) });
+            const ac = this.extraAction.get( this.current._clip.name );//this.extraAction[this.current._clip.name]
+            if(ac){
+                //ac.play()
+                ac.time = this.current.time
+                ac.setEffectiveWeight( 1 );
+            }
+        }
+
         this.isPause = false;
 
         return true;
     }
 
     playFrame ( name, frame, weight = 1 ) {
-
-
 
         let action = this.getAction( name );
         if ( !action ) return;
@@ -1477,6 +1699,17 @@ export class Avatar extends Group {
         action.play();
         action.paused = true;
         this.isPause = true;
+
+        if(this.extraAction ){
+            this.extraAction.forEach( function ( action ) { action.setEffectiveWeight( 0 ) });
+            const ac = this.extraAction.get( action._clip.name );//this.extraAction[this.current._clip.name]
+            if(ac){
+                //ac.play()
+                ac.time = action.time
+                ac.paused = true;
+                ac.setEffectiveWeight( weight );
+            }
+        }
 
     }
 
@@ -1490,11 +1723,25 @@ export class Avatar extends Group {
         this.current.paused = true;
         this.isPause = true;
 
+        if(this.extraAction ){
+            this.extraAction.forEach( function ( action ) { action.setEffectiveWeight( 0 ) });
+            const ac = this.extraAction.get( this.current._clip.name );//this.extraAction[this.current._clip.name]
+            if(ac){
+                //ac.play()
+                ac.time = this.current.time
+                ac.setEffectiveWeight( weight );
+                ac.play();
+                ac.paused = true;
+                
+            }
+        }
+
     }
 
     stop(){
 
         this.actions.forEach( function ( action ) { action.setEffectiveWeight( 0 ) });
+        this.current = null;
         //this.mixer.stopAllAction()
     }
 
@@ -1600,5 +1847,60 @@ export class Avatar extends Group {
         g.setAttribute( 'uv2', g.attributes.uv );
 
     }*/
+
+    speak( sequence, time ){
+
+        console.log( 'test', sequence, time, this.model );
+
+        this.speakGroup = new TWEEN.Group()
+
+        const lng = sequence.length
+        let timing = Math.floor(time/lng);
+
+        const t = []
+
+        const self = this
+
+       
+        
+
+        for (let i=0; i < lng; i++){
+
+            if(i===0){
+                t[i] = new TWEEN.Tween({ p:'', m:sequence[i], v:0, h:1 }, self.speakGroup).to( { v:1, h:0 }, timing ).onUpdate( (object)=>{ self.updateSpeakMorph(object) });
+           
+            } else {
+                t[i] = new TWEEN.Tween({ p:sequence[i-1],  m:sequence[i], v:0, h:1 }, self.speakGroup).to( { v:1, h:0 }, timing ).onUpdate( (object)=>{ self.updateSpeakMorph(object) });
+                t[i-1].chain(t[i]);
+                if(i===(lng-1)){
+                    t[i+1] = new TWEEN.Tween({ p:sequence[i],  m:'', v:0, h:1 }, self.speakGroup).to( { v:1, h:0 }, timing ).onUpdate( (object)=>{ self.updateSpeakMorph(object) }).onComplete(()=>{ self.stopSpeakMorph() });
+                    t[i].chain(t[i+1]);
+                }
+            } 
+
+        }
+
+        t[0].start()
+
+        //console.log( 'test', this.speakGroup );
+
+    }
+
+    updateSpeakMorph( obj ){
+
+        console.log('up', obj)
+
+        if(obj.p !== '') this.setMorph( obj.p, obj.h )
+        if(obj.m !== '') this.setMorph( obj.m, obj.v )
+
+    }
+
+    stopSpeakMorph( obj ){
+
+        console.log('stop talking')
+
+        this.speakGroup = null
+
+    }
 
 }

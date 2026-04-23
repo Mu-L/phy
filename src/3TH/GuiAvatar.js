@@ -24,8 +24,8 @@ export class Gui {
 	        sy: 2,
 	        radius:3,
 
-			background:'none',
-			backgroundOver:'none',//'rgba(255,255,255,0.02)',
+			background:'#1e1c1c',
+			backgroundOver:'#1e1c1c',//'rgba(255,255,255,0.02)',
 
 			//font:"'Roboto Mono', 'Source Code Pro', Consolas, monospace", 
 			font:"Mulish, sans-serif", 
@@ -59,14 +59,14 @@ export class Gui {
 
 		}
 
-		const ui = new UIL.Gui({ colors:colors, w:200 })
+		const ui = new UIL.Gui({ colors:colors, w:400 })
 		ui.add( 'title',  { name:'AVATAR 3.0', h:30, align:'center' })
 
 		//ui.add('button', { name:'EXPORT ANIMATION', h:30 }).onChange( function (b){ ref.export(); } )
 		//ui.add('button', { name:'EXPORT MODEL', h:30 }).onChange( function (b){ ref.exportGLB(); } )
 
-		ui.add( 'bool', { name:'helper', value:false, h:20 }).onChange( function (b){ ref.addHelper(b); ref2.addHelper(b);}	 )
-		ui.add( 'bool', { name:'exo', value:false, h:20 }).onChange( function (b){ ref.addExo(b); ref2.addExo(b);}	 )
+		ui.add( 'bool', { name:'helper', value:false, h:20 }).onChange( function (b){ ref.addHelper(b); if(ref2)ref2.addHelper(b);}	 )
+		ui.add( 'bool', { name:'exo', value:false, h:20 }).onChange( function (b){ ref.addExo(b); if(ref2)ref2.addExo(b);}	 )
 
 		//ui.add( 'bool', { name:'CLONE TEST', value:false, h:20 }).onChange( function (b){ fun(b); } )
 		ui.add( 'bool', { name:'REFLECT', value:false, h:20 }).onChange( function (b){ fun2(b); } )
@@ -180,8 +180,7 @@ export class Gui {
 
 		if( this.an ) this.an.dispose()
 
-		this.an = this.groupAnim.add( 'grid', { values:list, selectable:true, value:this.ref.current? this.ref.current.name:'IDLE', bsize:[110, 20] }).onChange( function(s){ 
-			this.ref.play(s); this.ref2.play(s); 
+		this.an = this.groupAnim.add( 'grid', { values:list, selectable:true, value:this.ref.current? this.ref.current.name:'IDLE', bsize:[160, 20] }).onChange( function(s){ 	
 			this.playAnim(s)
 		}.bind(this) )
 	    this.groupAnim.open()
@@ -285,12 +284,12 @@ class Timebarre {
         if( this.playing ){ 
             this.playing = false;
             this.ref.pause();
-            this.ref2.pause();
+            if(this.ref2)this.ref2.pause();
             //main.model.pause();
         } else {
             this.playing = true;
             this.ref.unPause();
-            this.ref2.unPause();
+            if(this.ref2)this.ref2.unPause();
             //main.model.unPause();
         }
 
@@ -392,7 +391,7 @@ class Timebarre {
             if(f>this.totalFrame) f = this.totalFrame; 
             this.frame = f;
             this.ref.playOne( this.frame );
-            this.ref2.playOne( this.frame );
+            if(this.ref2)this.ref2.playOne( this.frame );
         }
     }
 

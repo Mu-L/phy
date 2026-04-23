@@ -29,6 +29,9 @@ const setting = {
 export const Human = {
 
     refSize:1.81,
+    //refSize:1.75,
+
+    decalY:-0.035,
 
 	isBreath:false,
 	isEyeMove:false,

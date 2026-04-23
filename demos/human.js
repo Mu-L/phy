@@ -1,6 +1,7 @@
 const debug = 0;
 let player = null;
 let first = true
+let speech = null
 
 demo = () => {
 
@@ -54,9 +55,10 @@ onComplete_1 = () => {
 
 onComplete_2 = () => {
 
-
     Character(1);
     addGui();
+
+    
 
 }
 
@@ -177,6 +179,11 @@ const Character = ( num = 1 ) => {
 
     option.bodyMorph = model.bodyMorph;
     option.realSize = model.realSize;
+
+    let text = 'hello my name is ' + (gender[g] === 'man' ? 'bob': 'dianna')
+    speech = phy.addSpeech( text );
+    speech.initInterface();
+    speech.dispatch = (seq, time)=>{ player.model.speak( seq, time); } 
 
     //phy.follow('c_0', { direct:true, simple:true, distance:5, phi:0, theta:0, decal:[0.3, 0.5, -0.3], fov:60, zoom:1.0 })
     phy.follow( 'c_0', { direct:true, simple:true, distance:3, phi:10, theta:0, decal:[0, 0, 0], fov:50, zoom:1.0, zoomUp:true })

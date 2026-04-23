@@ -15945,6 +15945,7 @@ class Avatar extends Group$1 {
         this.speakGroup = null;
 
         this.n = Math.round(Math.random()*1000);
+        this.prevV = 0;
 
         this.actions = new Map();
         this.current = null;
@@ -16083,11 +16084,13 @@ class Avatar extends Group$1 {
         if( n<=t) v = n*s;
         if( n>t && n<=t*2 ) v = 1-((n-t)*s);
 
-        
+        if(v!==this.prevV){
+            this.setMorph( 'EyeBlink', v );
+        }
+
+        this.prevV = v;
         if( this.n>500 ){ this.n = 0;}
 
-        this.setMorph( 'EyeBlink', v );
-    
     }
 
     look( delta ){
@@ -17648,7 +17651,7 @@ class Avatar extends Group$1 {
 
     updateSpeakMorph( obj ){
 
-        console.log('up', obj);
+        //console.log('up', obj)
 
         if(obj.p !== '') this.setMorph( obj.p, obj.h );
         if(obj.m !== '') this.setMorph( obj.m, obj.v );

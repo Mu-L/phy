@@ -59,7 +59,7 @@ export const Human = {
 	textureRef:'avatar_c',
 	texturePath: 'assets/textures/avatar_',
 	textures: [
-        'avatar_c.jpg', 'avatar_n.jpg', 'avatar_t.jpg','avatar_r.jpg',//'avatar_m.jpg',  'avatar_u.jpg',
+        'avatar_c.jpg', 'avatar_n.jpg', 'avatar_t.jpg','avatar_r.jpg','avatar_m.jpg',  'avatar_u.jpg',
         'mouth_c.jpg', 'mouth_a.jpg', 'mouth_n.jpg', 
         'eye_c.jpg', 'eye_n.jpg', 'hair.jpg', 'hair_a.jpg',
         'eyelash_c.jpg', 'eyelash_a.jpg', 'eyelash_n.jpg',
@@ -85,17 +85,18 @@ export const Human = {
             //envMapIntensity:0.7,
             //reflectivity:0.2,
 
-            roughness:1.0,
-            metalness:0.14,
+            /*roughness:0.7,
+            metalness:0.14,*/
             
-            /*roughness:1,
+            roughness:1,
             metalness:1,
-            metalnessMap:'avatar_m',*/
+            metalnessMap:'avatar_m',
             roughnessMap:'avatar_r',
 
             normalScale: new Vector2( setting.normal, -setting.normal ),
-            sheenColor:0x4A1B00,
+            sheenColor:0xFFFFFF, //4A1B00,
             sheen:setting.sheen,
+            sheenColorMap:'avatar_u',
             sheenRoughness:setting.sheenRoughness,
 
             shadowSide: BackSide,
@@ -106,7 +107,7 @@ export const Human = {
 
             //sheenColorMap:'avatar_c',
             /*sheenColor:0xff0000,
-            sheenColorMap:'avatar_u',
+            
             iridescence:0.1,*/
             wireframe:setting.wireframe,
 

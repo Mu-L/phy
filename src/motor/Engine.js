@@ -871,6 +871,8 @@ export class Engine {
 
 			this.flowReset();
 
+			this.clearSpeech();
+
 			// clear instance
 		    this.clearInstance();
 
@@ -1667,6 +1669,14 @@ export class Engine {
 		//  SPEECH
 		//
 		//--------------------
+
+		this.clearSpeech = () => {
+
+		   if( !this.speech ) return;
+		   this.speech.clearInterface()
+		   this.speech = null;
+
+		}
 
 		this.addSpeech = ( txt = '' ) => {
 

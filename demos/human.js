@@ -226,3 +226,11 @@ const resize = ( v ) => {
 const showDebug = (debug) => {
     if(player) player.debugMode( debug );
 }
+
+
+
+onReset = () => {
+
+    speech.clearInterface()
+
+}
